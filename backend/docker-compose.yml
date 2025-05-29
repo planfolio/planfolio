@@ -1,16 +1,20 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mariadb:
-    image: mariadb:latest
+    image: mariadb:11          
     container_name: my-mariadb
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: myapp
-      MYSQL_USER: devuser
-      MYSQL_PASSWORD: devpass
+      MARIADB_ROOT_PASSWORD: rootpass   
+      MARIADB_DATABASE: myapp          
     ports:
       - "3306:3306"
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # ① 최초 기동 시 실행될 초기화 스크립트 (읽기 전용으로 마운트)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # ② DB 데이터를 보존할 볼륨
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:

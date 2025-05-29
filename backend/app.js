@@ -1,31 +1,29 @@
-require('dotenv').config();
+// app.js
+require('dotenv').config();                 
 const express = require('express');
-const mysql = require('mysql2/promise');
+const getConnection = require('./src/db');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// DB 연결 풀 생성
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
-
-// 간단한 health check용 라우터
 app.get('/health', async (req, res) => {
   try {
-    const connection = await pool.getConnection();
+    const connection = await getConnection();              
     const [rows] = await connection.query('SELECT NOW() AS now');
-    connection.release();
+    await connection.end();                               
     res.json({ status: 'ok', dbTime: rows[0].now });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
+  } catch (err) {
+    console.error('DB 연결 오류:', err.message);
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
+console.log('[DEBUG] ENV:', {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD
+});
+
+
 app.listen(port, () => {
-  console.log(`✅ Server running at http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
