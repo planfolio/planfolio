@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
   username      VARCHAR(255) NOT NULL UNIQUE,
   email         VARCHAR(255) NOT NULL UNIQUE,
   password      VARCHAR(255) NOT NULL,
-  name          VARCHAR(255),
-  nickname      VARCHAR(255),
+  name          VARCHAR(255) NOT NULL,
+  nickname      VARCHAR(255) NOT NULL,
   profile_image VARCHAR(500),
   is_public     BOOLEAN      DEFAULT FALSE,
   created_at    DATETIME     DEFAULT CURRENT_TIMESTAMP
