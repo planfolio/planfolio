@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Header } from "./components/Header/Header";
-import Home from "./pages/Home";
-// 아직 개발 전 페이지들은 주석 처리
-// import CalendarPage from "./pages/CalendarPage";
-// import LoginPage from "./pages/LoginPage";
-// import SignupPage from "./pages/SignupPage";
+import Home from "./pages/home/Home";
+import CalendarPage from "./pages/calendar";
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,7 +38,7 @@ const App: React.FC = () => {
       <main className="pt-4">
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* 다음 페이지들은 차후 개발 시 주석 해제 */}
+          <Route path="/calendar" element={<CalendarPage />} />
         </Routes>
       </main>
     </>
