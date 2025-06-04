@@ -74,7 +74,7 @@ exports.getFriendSchedules = async (req, res) => {
     );
 
     if (rows === null)
-      return res.status(403).json({ message: '친구가 아니거나 비공개 계정' });
+      return res.status(403).json({ message: '친구가 아닙니다' });
 
     res.json({ schedules: rows });
   } catch (err) {
