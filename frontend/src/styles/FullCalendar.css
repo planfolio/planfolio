@@ -1,0 +1,12 @@
+/* src/styles/fullcalendar-custom.css */
+
+/* 버튼, 오늘 날짜, 이벤트 등 테마 색상 */
+.fc {
+  --fc-button-bg-color: #ff6f3c;
+  --fc-button-border-color: #ff6f3c;
+  --fc-button-hover-bg-color: #ff8a4c;
+  --fc-today-bg-color: #fff7ed;
+  --fc-event-bg-color: #ff6f3c;
+  --fc-event-border-color: #ff6f3c;
+  --fc-event-text-color: #fff;
+}
