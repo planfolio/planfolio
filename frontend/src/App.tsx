@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { Header } from "./components/Header/Header";
 import Home from "./pages/home/Home";
 import CalendarPage from "./pages/calendar";
+import Footer from "./components/Footer/Footer";
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,6 +42,8 @@ const App: React.FC = () => {
           <Route path="/calendar" element={<CalendarPage />} />
         </Routes>
       </main>
+
+      <Footer />
     </>
   );
 };
