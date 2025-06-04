@@ -4,6 +4,8 @@ const {
   createSchedule,
   updateSchedule,
   deleteSchedule,
+  getFriendSchedules,
+  getPublicSchedules,
 } = require('../models/schedule.model');
 
 /* 내 일정 목록 */
@@ -56,4 +58,46 @@ exports.deleteSchedule = async (req, res) => {
   const ok = await deleteSchedule(id, req.user.id);
   if (!ok) return res.status(404).json({ message: '일정 없음' });
   res.json({ message: '삭제 완료' });
+};
+
+/* 친구 일정 목록 (친구 관계 확인 후 전체 일정 반환) */
+exports.getFriendSchedules = async (req, res) => {
+  const { username } = req.params;
+  const { startDate, endDate } = req.query;
+
+  try {
+    const rows = await getFriendSchedules(
+      req.user.id,      // 로그인 사용자
+      username,         // 친구 아이디
+      startDate,
+      endDate,
+    );
+
+    if (rows === null)
+      return res.status(403).json({ message: '친구가 아닙니다' });
+
+    res.json({ schedules: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: '일정 조회 실패' });
+  }
+};
+
+/* 공개 계정 일정 목록 (친구 여부 무관) */
+exports.getUserPublicSchedules = async (req, res) => {
+  const { username } = req.params;
+  const { startDate, endDate } = req.query;
+
+  try {
+    const rows = await getPublicSchedules(username, startDate, endDate);
+
+    if (rows === null)
+      return res.status(404).json({ message: '사용자 없음 또는 비공개 계정' });
+
+    const events = rows.map(({ id, ...rest }) => rest);
+    res.json({ schedules: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: '일정 조회 실패' });
+  }
 };
