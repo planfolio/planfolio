@@ -5,6 +5,7 @@ const userRoutes = require("./src/routes/user.routes");
 const scheduleRoutes = require("./src/routes/schedule.routes");
 const contestRouter = require("./src/routes/contest.routes");
 const friendRouter = require("./src/routes/friend.routes");
+const bookmarkRouter = require("./src/routes/bookmark.routes");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use("/", userRoutes);
 app.use("/", scheduleRoutes);
 app.use("/", contestRouter);
 app.use("/", friendRouter);
+app.use("/", bookmarkRouter);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
