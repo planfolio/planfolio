@@ -4,7 +4,7 @@ const auth = require("../middlewares/auth");
 
 router.post("/friends", auth, ctrl.addFriend);
 router.get("/friends/received", auth, ctrl.receivedFriends);
-router.post("friends/:username", auth, ctrl.acceptFriend);
+router.patch("/friends/:username", auth, ctrl.acceptFriend);
 router.get("/friends", auth, ctrl.getFriends);
 router.delete("/friends/:username", auth, ctrl.deleteFriend);
 
