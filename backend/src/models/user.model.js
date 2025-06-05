@@ -57,6 +57,17 @@ async function updateUser(id, fields) {
   await conn.end();
 }
 
+/** 프로필 이미지 경로 업데이트 (추가) */
+async function updateProfileImage(userId, imagePath) {
+  const conn = await getConnection();
+  await conn.query(
+    'UPDATE users SET profile_image = ? WHERE id = ?',
+    [imagePath, userId]
+  );
+  await conn.end();
+  return true;
+}
+
 /** 비밀번호 변경 */
 async function changePassword(id, newPassword) {
   const hashed = await bcrypt.hash(newPassword, 12);
@@ -78,5 +89,6 @@ module.exports = {
   updateUser,
   changePassword,
   deleteUser,
-  getProfileById
+  getProfileById,
+  updateProfileImage,
 };

@@ -9,6 +9,7 @@ const {
   changePassword,
   deleteUser,
   getProfileById,
+  updateProfileImage,
 } = require('../models/user.model');
 
 const TOKEN_EXPIRE = '7d';
@@ -78,26 +79,49 @@ exports.me = async (req, res) => {
 
 /** 내 정보 수정 */
 exports.updateMe = async (req, res) => {
-  const { nickname, profile_image, is_public } = req.body;
-
-  const payload = {};
-  if (nickname       !== undefined) payload.nickname       = nickname;
-  if (profile_image  !== undefined) payload.profile_image  = profile_image;
-  if (is_public      !== undefined) payload.is_public      = !!is_public; // true/false → 1/0
-
-  if (!Object.keys(payload).length) {
-    return res.status(400).json({ message: '수정할 필드가 없습니다.' });
-  }
-
   try {
-    await updateUser(req.user.id, payload);
+    // (디버깅용 로그)
+    console.log('▶▶▶ updateMe 호출됨, req.file:', req.file);
+    console.log('▶▶▶ updateMe 호출됨, req.body:', req.body);
 
-    //최신 프로필 다시 조회
-    const user = await getProfileById(req.user.id);
+    const userId = req.user.id;
 
-    return res.status(200).json({ message: '수정 완료' });
+    // 여기서 req.body가 undefined면 빈 객체로 초기화 
+    req.body = req.body || {};
+
+    const fields = {};
+
+    // 텍스트 필드 처리 (nickname, is_public)
+    if (req.body.nickname !== undefined) {
+      fields.nickname = req.body.nickname;
+    }
+
+    if (req.body.is_public !== undefined) {
+      const val = req.body.is_public;
+      fields.is_public =
+        val === 'true' || val === '1' || val === 1 || val === true;
+    }
+
+    // 프로필 이미지 업로드 처리
+    if (req.file) {
+      const filename = req.file.filename;
+      const imageUrl = `/uploads/${filename}`;
+      await updateProfileImage(userId, imageUrl);
+    }
+
+    // 텍스트 필드가 있다면 updateUser 호출
+    if (Object.keys(fields).length > 0) {
+      await updateUser(userId, fields);
+    }
+
+    // 최종 변경된 프로필 조회
+    const updatedProfile = await getProfileById(userId);
+    return res.status(200).json({
+      message: '회원 정보가 업데이트되었습니다.',
+      profile: updatedProfile
+    });
   } catch (err) {
-    console.error(err);
+    console.error('▶▶▶ updateMe 오류:', err);
     return res.status(500).json({ message: '서버 오류' });
   }
 };
