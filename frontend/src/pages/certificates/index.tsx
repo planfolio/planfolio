@@ -86,7 +86,7 @@ const CertificatesPage: React.FC = () => {
         });
 
   return (
-    <div className="certificate-page flex max-w-6xl mx-auto p-6 gap-6">
+    <div className="certificate-page flex max-w-6xl mx-auto p-6 gap-6 select-none">
       {/* 좌측: 필터 */}
       <aside className="w-40">
         <div className="bg-white rounded-lg shadow p-4">
@@ -99,7 +99,7 @@ const CertificatesPage: React.FC = () => {
       </aside>
 
       {/* 우측: 리스트 */}
-      <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4">
+      <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4 select-none">
         {filteredCertificates.length === 0 ? (
           <div className="text-gray-400 text-center py-8">
             해당 분류의 자격증이 없습니다.

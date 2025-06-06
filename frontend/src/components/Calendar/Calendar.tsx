@@ -6,7 +6,7 @@ import koLocale from "@fullcalendar/core/locales/ko";
 
 const Calendar: React.FC = () => {
   return (
-    <div>
+    <div className="select-none">
       <FullCalendar
         plugins={[dayGridPlugin]}
         initialView="dayGridMonth"

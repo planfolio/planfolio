@@ -11,7 +11,7 @@ const ScheduleFilter: React.FC<ScheduleFilterProps> = ({
   selected,
   onSelect,
 }) => (
-  <div className="flex flex-col gap-2">
+  <div className="flex flex-col gap-2 select-none">
     {filters.map((filter) => (
       <button
         key={filter}

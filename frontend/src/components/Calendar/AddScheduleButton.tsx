@@ -7,6 +7,7 @@ const AddScheduleButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
       bg-orange-500 hover:bg-orange-600
       text-white rounded font-bold
       transition
+      select-none
     "
     onClick={onClick}
     type="button"
