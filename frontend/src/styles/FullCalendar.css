@@ -10,3 +10,17 @@
   --fc-event-border-color: #ff6f3c;
   --fc-event-text-color: #fff;
 }
+
+.fc .fc-daygrid-day,
+.fc .fc-timegrid-slot,
+.fc .fc-daygrid-day-frame {
+  user-select: none;
+  caret-color: transparent !important;
+  outline: none !important;
+}
+
+.fc .fc-daygrid-day:focus,
+.fc .fc-timegrid-slot:focus,
+.fc .fc-daygrid-day-frame:focus {
+  outline: none !important;
+}

@@ -5,6 +5,11 @@ module.exports = {
       colors: {
         main: "#5932EA",
         region: "#E5E7EB",
+        coral: {
+          DEFAULT: "#FF6F61", // 코랄 오렌지 메인
+          light: "#FFB6A1", // 밝은 코랄 (원하는 색상으로 조정)
+          dark: "#E85C50", // 진한 코랄 (원하는 색상으로 조정)
+        },
       },
       textColor: {
         main: "#5932EA",
@@ -17,6 +22,7 @@ module.exports = {
         white: "#FFFFFF",
         gray: "#F3F4F6",
         "gray-hover": "#E5E7EB",
+        coral: "#FF6F61", // 배경색으로도 coral 추가
       },
       fontFamily: {
         pre: ["Pretendard", "sans-serif"],
