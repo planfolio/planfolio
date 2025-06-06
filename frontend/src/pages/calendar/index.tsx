@@ -18,7 +18,7 @@ const CalendarPage: React.FC = () => {
   };
 
   return (
-    <div className="flex max-w-6xl mx-auto p-6 gap-6">
+    <div className="flex max-w-6xl mx-auto p-6 gap-6 select-none">
       <aside className="w-52">
         <div className="bg-white rounded-lg shadow p-4 flex flex-col gap-4">
           <AddScheduleButton onClick={handleAddSchedule} />
@@ -29,7 +29,7 @@ const CalendarPage: React.FC = () => {
           />
         </div>
       </aside>
-      <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4">
+      <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4 select-none">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin]}
           initialView="dayGridMonth"

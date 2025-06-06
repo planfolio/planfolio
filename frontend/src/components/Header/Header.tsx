@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogoutClick,
 }) => {
   return (
-    <header className="header bg-white border-b border-gray-200">
+    <header className="header bg-white border-b border-gray-200 select-none">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
           <Logo />
