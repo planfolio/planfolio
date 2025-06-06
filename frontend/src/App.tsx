@@ -1,30 +1,17 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 import { Header } from "./components/Header/Header";
 import Footer from "./components/Footer/Footer";
 import AppRoutes from "./routes/routes";
+import { useAuth } from "./hooks/useAuth";
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
-
-  const handleLoginClick = () => {
-    navigate("/login");
-  };
-
-  const handleSignupClick = () => {
-    navigate("/signup");
-  };
-
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    navigate("/");
-  };
-
-  const handleLogoutClick = () => {
-    setIsAuthenticated(false);
-    navigate("/");
-  };
+  const {
+    isAuthenticated,
+    handleLoginClick,
+    handleSignupClick,
+    handleLoginSuccess,
+    handleLogoutClick,
+  } = useAuth();
 
   return (
     <>
@@ -34,7 +21,6 @@ const App: React.FC = () => {
         onSignupClick={handleSignupClick}
         onLogoutClick={handleLogoutClick}
       />
-
       <main className="pt-4">
         <AppRoutes />
       </main>
