@@ -6,10 +6,17 @@ import ContestPage from "../pages/contest";
 import CodingTestPage from "../pages/codingtest";
 import CertificatesPage from "../pages/certificates";
 
-const AppRoutes: React.FC = () => (
+interface AppRoutesProps {
+  isAuthenticated: boolean;
+}
+
+const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthenticated }) => (
   <Routes>
     <Route path="/" element={<Home />} />
-    <Route path="/calendar" element={<CalendarPage />} />
+    <Route
+      path="/calendar"
+      element={<CalendarPage isAuthenticated={isAuthenticated} />}
+    />
     <Route path="/contests" element={<ContestPage />} />
     <Route path="/coding-tests" element={<CodingTestPage />} />
     <Route path="/certificates" element={<CertificatesPage />} />

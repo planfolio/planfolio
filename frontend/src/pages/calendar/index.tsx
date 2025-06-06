@@ -6,16 +6,27 @@ import koLocale from "@fullcalendar/core/locales/ko";
 import AddScheduleButton from "../../components/Calendar/AddScheduleButton";
 import ScheduleFilter from "../../components/Calendar/ScheduleFilter";
 import "../../styles/FullCalendar.css";
+import { useNavigate } from "react-router-dom";
 
 const FILTERS = ["전체", "공모전", "자격증", "코딩테스트", "개인"];
 
-const CalendarPage: React.FC = () => {
+interface CalendarPageProps {
+  isAuthenticated: boolean;
+}
+
+const CalendarPage: React.FC<CalendarPageProps> = ({ isAuthenticated }) => {
   const [selected, setSelected] = useState("전체");
 
+  const navigate = useNavigate();
+
   const handleAddSchedule = useCallback(() => {
+    if (!isAuthenticated) {
+      alert("로그인이 필요합니다!");
+      navigate("/login");
+      return;
+    }
     alert("일정 추가 폼/모달이 열립니다!");
-    // TODO: 일정 추가 모달 상태 관리
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="flex max-w-6xl mx-auto p-6 gap-6 select-none">
