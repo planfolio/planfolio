@@ -57,7 +57,7 @@ const CodingTestPage: React.FC = () => {
         });
 
   return (
-    <div className="flex max-w-6xl mx-auto p-6 gap-6">
+    <div className="coding-test-page flex max-w-6xl mx-auto p-6 gap-6">
       {/* 좌측: 필터 */}
       <aside className="w-40">
         <div className="bg-white rounded-lg shadow p-4">
