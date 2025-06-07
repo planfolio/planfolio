@@ -22,7 +22,7 @@ const App: React.FC = () => {
         onLogoutClick={handleLogoutClick}
       />
       <main className="pt-4">
-        <AppRoutes />
+        <AppRoutes isAuthenticated={isAuthenticated} />
       </main>
       <Footer />
     </>
