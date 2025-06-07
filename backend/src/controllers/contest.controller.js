@@ -23,3 +23,15 @@ exports.getCodingTestList = async (_req, res) => {
     res.status(500).json({ message: '코딩테스트 조회 실패' });
   }
 };
+
+/* 자격증 일정 목록 (type = qualification) */
+exports.getQualificationList = async (_req, res) => {
+  try {
+    const rows = await fetchContestsByType('qualification');
+    const qualifications = rows.map(({ id, ...rest }) => rest);
+    res.json(qualifications);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: '자격증 일정 조회 실패' });
+  }
+};
