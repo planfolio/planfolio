@@ -1,4 +1,3 @@
-// EventFilter.tsx
 type FilterProps = {
   categories: string[];
   selected: string[];
@@ -11,22 +10,33 @@ const EventFilter: React.FC<FilterProps> = ({
   onChange,
 }) => (
   <div>
-    <h2 className="font-bold mb-3">분류별 필터</h2>
-    {categories.map((cat, idx) => (
-      <label key={cat} className="block mb-2">
-        <input
-          type="checkbox"
-          checked={
-            cat === "전체"
-              ? selected.length === 0 // 전체는 selected가 비어있을 때만 체크
-              : selected.includes(cat)
-          }
-          onChange={() => onChange(cat)}
-          className="mr-2"
-        />
-        {cat}
-      </label>
-    ))}
+    <h2 className="font-bold mb-3 text-gray-700 text-base">분류별 필터</h2>
+    <div className="flex flex-wrap gap-2">
+      {categories.map((cat) => {
+        const isActive =
+          cat === "전체" ? selected.length === 0 : selected.includes(cat);
+        return (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => onChange(cat)}
+            className={`
+              px-4 py-1 rounded-full text-sm font-medium
+              border transition
+              ${
+                isActive
+                  ? "bg-orange-100 text-orange-600 border-orange-200 shadow"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-orange-50"
+              }
+              focus:outline-none focus:ring-1 focus:ring-orange-300
+            `}
+            aria-pressed={isActive}
+          >
+            {cat}
+          </button>
+        );
+      })}
+    </div>
   </div>
 );
 

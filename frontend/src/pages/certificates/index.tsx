@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import EventFilter from "../../components/EventComponent/EventFilter";
 import EventListItem from "../../components/EventComponent/EventListItem";
 
@@ -25,10 +26,17 @@ const MAIN_CERT_TAGS = [
   "데이터아키텍처 준전문가",
 ];
 
-const CertificatesPage: React.FC = () => {
+interface CertificatesPageProps {
+  isAuthenticated?: boolean;
+}
+
+const CertificatesPage: React.FC<CertificatesPageProps> = ({
+  isAuthenticated,
+}) => {
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get("http://localhost:3000/qualifications").then((res) => {
@@ -69,6 +77,33 @@ const CertificatesPage: React.FC = () => {
     }
   };
 
+  // 북마크(내 캘린더 추가) 핸들러
+  const handleBookmark = useCallback(
+    (qual: Qualification) => {
+      if (!isAuthenticated) {
+        alert("로그인이 필요합니다!");
+        navigate("/login");
+        return;
+      }
+      axios
+        .post("http://localhost:3000/calendar", {
+          title: qual.title,
+          description: qual.description,
+          start_date: qual.start_date,
+          end_date: qual.end_date,
+          source: "qualification",
+        })
+        .then(() => {
+          alert("내 캘린더에 추가되었습니다!");
+        })
+        .catch((err) => {
+          alert("추가에 실패했습니다.");
+          console.error(err);
+        });
+    },
+    [isAuthenticated, navigate]
+  );
+
   const filteredQualifications =
     selected.length === 0
       ? qualifications
@@ -92,7 +127,6 @@ const CertificatesPage: React.FC = () => {
           />
         </div>
       </aside>
-
       {/* 우측: 리스트 */}
       <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4 select-none">
         {filteredQualifications.length === 0 ? (
@@ -107,6 +141,7 @@ const CertificatesPage: React.FC = () => {
               date={`${qual.start_date} ~ ${qual.end_date}`}
               type={qual.tags}
               description={qual.description}
+              onBookmark={() => handleBookmark(qual)}
             />
           ))
         )}
