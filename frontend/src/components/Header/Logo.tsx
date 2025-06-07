@@ -7,12 +7,13 @@ export const Logo: React.FC = () => {
       to="/"
       className="flex items-center font-pre"
       style={{ width: "max-content" }}
+      aria-label="PLANfolio 홈으로"
     >
-      <span className="text-[27px] font-bold text-orange-500 ml-2 leading-none">
-        PLAN
-      </span>
-      <span className="text-[24px] font-semibold text-black leading-none ml-1">
-        folio
+      <span
+        className="text-[28px] font-extrabold bg-gradient-to-r from-orange-400 via-pink-400 to-purple-500 bg-clip-text text-transparent tracking-tight leading-none"
+        style={{ letterSpacing: "-0.03em" }}
+      >
+        PLANfolio
       </span>
     </Link>
   );

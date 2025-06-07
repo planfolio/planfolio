@@ -12,6 +12,7 @@ const FILTERS = ["전체", "공모전", "자격증", "코딩테스트", "개인"
 
 interface CalendarPageProps {
   isAuthenticated: boolean;
+  accessToken?: string;
 }
 
 const CalendarPage: React.FC<CalendarPageProps> = ({ isAuthenticated }) => {

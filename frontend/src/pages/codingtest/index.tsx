@@ -1,22 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import EventFilter from "../../components/EventComponent/EventFilter";
 import EventListItem from "../../components/EventComponent/EventListItem";
 import type { CodingTest } from "../../types/codingTest";
 
-const CodingTestPage: React.FC = () => {
+interface CodingTestPageProps {
+  isAuthenticated: boolean;
+}
+
+const CodingTestPage: React.FC<CodingTestPageProps> = ({ isAuthenticated }) => {
   const [tests, setTests] = useState<CodingTest[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/coding-tests") // 백엔드 API 경로에 맞게 수정
+      .get("http://localhost:3000/coding-tests")
       .then((res) => {
         const data: CodingTest[] = Array.isArray(res.data) ? res.data : [];
         setTests(data);
 
-        // 모든 tags를 중복 없이 추출
         const tagSet = new Set<string>();
         data.forEach((test) => {
           test.tags
@@ -44,6 +49,33 @@ const CodingTestPage: React.FC = () => {
       });
     }
   };
+
+  // 북마크(내 캘린더 추가) 핸들러
+  const handleBookmark = useCallback(
+    (test: CodingTest) => {
+      if (!isAuthenticated) {
+        alert("로그인이 필요합니다!");
+        navigate("/login");
+        return;
+      }
+      axios
+        .post("http://localhost:3000/calendar", {
+          title: test.title,
+          description: test.description,
+          start_date: test.start_date,
+          end_date: test.end_date,
+          source: "codingtest",
+        })
+        .then(() => {
+          alert("내 캘린더에 추가되었습니다!");
+        })
+        .catch((err) => {
+          alert("추가에 실패했습니다.");
+          console.error(err);
+        });
+    },
+    [isAuthenticated, navigate]
+  );
 
   const filteredTests =
     selected.length === 0
@@ -83,6 +115,7 @@ const CodingTestPage: React.FC = () => {
               date={`${test.start_date} ~ ${test.end_date}`}
               type={test.tags}
               description={test.description}
+              onBookmark={() => handleBookmark(test)}
             />
           ))
         )}

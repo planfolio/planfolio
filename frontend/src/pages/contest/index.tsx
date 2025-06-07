@@ -1,13 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import EventFilter from "../../components/EventComponent/EventFilter";
 import EventListItem from "../../components/EventComponent/EventListItem";
 import type { Contest } from "../../types/contest";
 
-const ContestPage: React.FC = () => {
+interface ContestPageProps {
+  isAuthenticated: boolean;
+}
+
+const ContestPage: React.FC<ContestPageProps> = ({ isAuthenticated }) => {
   const [contests, setContests] = useState<Contest[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
@@ -16,11 +22,10 @@ const ContestPage: React.FC = () => {
         const data: Contest[] = Array.isArray(res.data) ? res.data : [];
         setContests(data);
 
-        // 모든 tags를 모아서 중복 없이 추출
         const tagSet = new Set<string>();
         data.forEach((contest) => {
           contest.tags
-            .replace(/\//g, ",") // "게임/소프트웨어" → "게임,소프트웨어"
+            .replace(/\//g, ",")
             .split(",")
             .map((tag) => tag.trim())
             .forEach((tag) => tag && tag.length > 0 && tagSet.add(tag));
@@ -32,7 +37,6 @@ const ContestPage: React.FC = () => {
       });
   }, []);
 
-  // 필터 변경 핸들러
   const handleFilterChange = (tag: string) => {
     if (tag === "전체") {
       setSelected([]);
@@ -46,7 +50,33 @@ const ContestPage: React.FC = () => {
     }
   };
 
-  // 필터링된 데이터
+  // 북마크(내 캘린더 추가) 핸들러
+  const handleBookmark = useCallback(
+    (contest: Contest) => {
+      if (!isAuthenticated) {
+        alert("로그인이 필요합니다!");
+        navigate("/login");
+        return;
+      }
+      axios
+        .post("http://localhost:3000/calendar", {
+          title: contest.title,
+          description: contest.description,
+          start_date: contest.start_date,
+          end_date: contest.end_date,
+          source: "contest",
+        })
+        .then(() => {
+          alert("내 캘린더에 추가되었습니다!");
+        })
+        .catch((err) => {
+          alert("추가에 실패했습니다.");
+          console.error(err);
+        });
+    },
+    [isAuthenticated, navigate]
+  );
+
   const filteredEvents =
     selected.length === 0
       ? contests
@@ -85,6 +115,7 @@ const ContestPage: React.FC = () => {
               date={`${event.start_date} ~ ${event.end_date}`}
               type={event.tags}
               description={event.description}
+              onBookmark={() => handleBookmark(event)}
             />
           ))
         )}
