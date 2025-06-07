@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import EventFilter from "../../components/ContestEvent/EventFilter";
-import EventListItem from "../../components/ContestEvent/EventListItem";
+import EventFilter from "../../components/EventComponent/EventFilter";
+import EventListItem from "../../components/EventComponent/EventListItem";
 import type { Contest } from "../../types/contest";
 
 const ContestPage: React.FC = () => {
