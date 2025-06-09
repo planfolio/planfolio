@@ -7,7 +7,7 @@ const {
   createUser,
   updateUser,
   changePassword,
-  deleteUser,
+  deleteUserCascade,
   getProfileById,
   updateProfileImage,
 } = require('../models/user.model');
@@ -141,7 +141,22 @@ exports.changePassword = async (req, res) => {
 };
 
 /** 회원 탈퇴 */
-exports.deleteMe = async (_req, res) => {
-  await deleteUser(_req.user.id);
-  res.json({ message: '회원 탈퇴 완료' });
-}; //이후 일정 및 친구 추가 되면 수정할 예정
+exports.deleteMe = async (req, res, next) => {
+  try {
+    
+    const user = await getProfileById(req.user.id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    await deleteUserCascade(req.user.id);
+
+    return res
+      .status(200)
+      .json({ message: '탈퇴되었습니다.' });
+  } catch (err) {
+    return next(err);
+  }
+};

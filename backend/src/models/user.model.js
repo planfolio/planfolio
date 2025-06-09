@@ -77,10 +77,42 @@ async function changePassword(id, newPassword) {
 }
 
 /** 회원 탈퇴 */
-async function deleteUser(id) {
+async function deleteUserCascade(userId) {
   const conn = await getConnection();
-  await conn.query('DELETE FROM users WHERE id = ?', [id]);
-  await conn.end();
+  try {
+    await conn.beginTransaction();
+
+    // 친구 관계 삭제 (양쪽)
+    await conn.query(
+      'DELETE FROM friends WHERE user_id = ? OR friend_id = ?',
+      [userId, userId]
+    );
+
+    // 일정 삭제
+    await conn.query(
+      'DELETE FROM schedules WHERE user_id = ?',
+      [userId]
+    );
+
+    // 즐겨찾기 삭제
+    await conn.query(
+      'DELETE FROM bookmarks WHERE user_id = ?',
+      [userId]
+    );
+
+    // 최종 사용자 삭제
+    await conn.query(
+      'DELETE FROM users WHERE id = ?',
+      [userId]
+    );
+
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    await conn.end();
+  }
 }
 
 module.exports = {
@@ -88,7 +120,7 @@ module.exports = {
   createUser,
   updateUser,
   changePassword,
-  deleteUser,
+  deleteUserCascade,
   getProfileById,
   updateProfileImage,
 };
