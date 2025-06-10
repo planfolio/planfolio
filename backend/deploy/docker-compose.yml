@@ -2,12 +2,12 @@ version: "3.8"
 
 services:
   mariadb:
-    image: mariadb:11          
+    image: mariadb:11
     container_name: my-mariadb
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: rootpass   
-      MARIADB_DATABASE: myapp          
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
     ports:
       - "3306:3306"
     volumes:
