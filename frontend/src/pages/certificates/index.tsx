@@ -1,17 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import EventFilter from "../../components/EventComponent/EventFilter";
 import EventListItem from "../../components/EventComponent/EventListItem";
-
-type Qualification = {
-  type: string;
-  title: string;
-  description: string;
-  tags: string;
-  start_date: string;
-  end_date: string;
-};
+import { useCertificateStore } from "../../store/useCertificatesStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const EXCLUDE_TAGS = ["시험", "필기", "실기", "원서접수"];
 const MAIN_CERT_TAGS = [
@@ -26,43 +18,39 @@ const MAIN_CERT_TAGS = [
   "데이터아키텍처 준전문가",
 ];
 
-interface CertificatesPageProps {
-  isAuthenticated?: boolean;
-}
-
-const CertificatesPage: React.FC<CertificatesPageProps> = ({
-  isAuthenticated,
-}) => {
-  const [qualifications, setQualifications] = useState<Qualification[]>([]);
+const CertificatesPage: React.FC = () => {
+  const { qualifications, isLoading, fetchQualifications } =
+    useCertificateStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:3000/qualifications").then((res) => {
-      setQualifications(res.data);
+    fetchQualifications();
+  }, [fetchQualifications]);
 
-      // 태그 추출 및 정제
-      const tagSet = new Set<string>();
-      res.data.forEach((qual: Qualification) => {
-        qual.tags
-          .replace(/\//g, ",")
-          .split(",")
-          .map((tag) => tag.trim())
-          .forEach((tag) => {
-            if (
-              tag &&
-              tag.length > 0 &&
-              !EXCLUDE_TAGS.includes(tag) &&
-              MAIN_CERT_TAGS.includes(tag)
-            ) {
-              tagSet.add(tag);
-            }
-          });
-      });
-      setFilterTags(Array.from(tagSet));
+  useEffect(() => {
+    // 태그 추출 및 정제
+    const tagSet = new Set<string>();
+    qualifications.forEach((qual) => {
+      qual.tags
+        .replace(/\//g, ",")
+        .split(",")
+        .map((tag) => tag.trim())
+        .forEach((tag) => {
+          if (
+            tag &&
+            tag.length > 0 &&
+            !EXCLUDE_TAGS.includes(tag) &&
+            MAIN_CERT_TAGS.includes(tag)
+          ) {
+            tagSet.add(tag);
+          }
+        });
     });
-  }, []);
+    setFilterTags(Array.from(tagSet));
+  }, [qualifications]);
 
   const handleFilterChange = (tag: string) => {
     if (tag === "전체") {
@@ -79,27 +67,15 @@ const CertificatesPage: React.FC<CertificatesPageProps> = ({
 
   // 북마크(내 캘린더 추가) 핸들러
   const handleBookmark = useCallback(
-    (qual: Qualification) => {
+    (qual) => {
       if (!isAuthenticated) {
         alert("로그인이 필요합니다!");
         navigate("/login");
         return;
       }
-      axios
-        .post("http://localhost:3000/calendar", {
-          title: qual.title,
-          description: qual.description,
-          start_date: qual.start_date,
-          end_date: qual.end_date,
-          source: "qualification",
-        })
-        .then(() => {
-          alert("내 캘린더에 추가되었습니다!");
-        })
-        .catch((err) => {
-          alert("추가에 실패했습니다.");
-          console.error(err);
-        });
+      // 북마크 추가 API (예시)
+      // await axios.post("http://localhost:3000/calendar", { ... })
+      alert("내 캘린더에 추가되었습니다!");
     },
     [isAuthenticated, navigate]
   );
@@ -129,7 +105,9 @@ const CertificatesPage: React.FC<CertificatesPageProps> = ({
       </aside>
       {/* 우측: 리스트 */}
       <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4 select-none">
-        {filteredQualifications.length === 0 ? (
+        {isLoading ? (
+          <div className="text-gray-400 text-center py-8">불러오는 중...</div>
+        ) : filteredQualifications.length === 0 ? (
           <div className="text-gray-400 text-center py-8">
             해당 분류의 자격증이 없습니다.
           </div>

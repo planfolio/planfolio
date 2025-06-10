@@ -1,31 +1,17 @@
 import React from "react";
+import AppRoutes from "./routes/routes";
 import { Header } from "./components/Header/Header";
 import Footer from "./components/Footer/Footer";
-import AppRoutes from "./routes/routes";
-import { useAuth } from "./hooks/useAuth";
 
 const App: React.FC = () => {
-  const {
-    isAuthenticated,
-    handleLoginClick,
-    handleSignupClick,
-    handleLoginSuccess,
-    handleLogoutClick,
-  } = useAuth();
-
   return (
-    <>
-      <Header
-        isAuthenticated={isAuthenticated}
-        onLoginClick={handleLoginClick}
-        onSignupClick={handleSignupClick}
-        onLogoutClick={handleLogoutClick}
-      />
-      <main className="pt-4">
-        <AppRoutes isAuthenticated={isAuthenticated} />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <AppRoutes />
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 
