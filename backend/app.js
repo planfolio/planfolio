@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path         = require("path");
+const path = require("path");
 const userRoutes = require("./src/routes/user.routes");
 const scheduleRoutes = require("./src/routes/schedule.routes");
 const contestRouter = require("./src/routes/contest.routes");
@@ -11,7 +12,10 @@ const bookmarkRouter = require("./src/routes/bookmark.routes");
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// CORS 설정 (모든 도메인 허용)
+app.use(cors());
 
 app.use(cookieParser());
 app.use(express.json());
