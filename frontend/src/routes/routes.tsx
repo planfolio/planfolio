@@ -7,6 +7,7 @@ import CodingTestPage from "../pages/codingtest";
 import CertificatesPage from "../pages/certificates";
 import LoginPage from "../pages/Login";
 import SignupPage from "../pages/Signup";
+import MyPage from "../components/Mypage/MyPage";
 
 const AppRoutes: React.FC = () => (
   <Routes>
@@ -17,6 +18,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/certificates" element={<CertificatesPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
+    <Route path="/mypage" element={<MyPage />} />
   </Routes>
 );
 

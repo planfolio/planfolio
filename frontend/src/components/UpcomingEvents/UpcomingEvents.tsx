@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../../api/axiosInstance";
 
 type EventItem = {
   type: string;
@@ -26,14 +27,21 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
+const typeToPath: Record<string, string> = {
+  contest: "/contests",
+  certificate: "/certificates",
+  codingtest: "/coding-tests",
+};
+
 const UpcomingEvents: React.FC = () => {
   const [upcoming, setUpcoming] = useState<EventItem[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:3000/contests"),
-      axios.get("http://localhost:3000/qualifications"),
-      axios.get("http://localhost:3000/coding-tests"),
+      api.get("/contests"),
+      api.get("/qualifications"),
+      api.get("/coding-tests"),
     ]).then(([contestsRes, certsRes, testsRes]) => {
       const all = [
         ...contestsRes.data.map((item: any) => ({ ...item, type: "contest" })),
@@ -68,7 +76,11 @@ const UpcomingEvents: React.FC = () => {
           {upcoming.map((event, idx) => (
             <li
               key={event.title + event.start_date}
-              className="flex items-center gap-4 bg-white/60 backdrop-blur-lg rounded-2xl shadow-lg p-5 border border-gray-100 hover:scale-[1.025] hover:shadow-xl transition"
+              className="flex items-center gap-4 bg-white/60 backdrop-blur-lg rounded-2xl shadow-lg p-5 border border-gray-100 hover:scale-[1.025] hover:shadow-xl transition cursor-pointer"
+              onClick={() => navigate(typeToPath[event.type])}
+              tabIndex={0}
+              role="button"
+              aria-label={`${event.type}로 이동`}
             >
               {ICONS[event.type] || (
                 <span className="flex items-center justify-center w-9 h-9 bg-gray-200 rounded-full shadow">
@@ -84,13 +96,14 @@ const UpcomingEvents: React.FC = () => {
                 </div>
               </div>
               <span
-                className={`ml-2 px-2 py-0.5 text-xs rounded-full font-semibold ${
-                  event.type === "contest"
-                    ? "bg-orange-100 text-orange-600"
-                    : event.type === "certificate"
-                    ? "bg-green-100 text-green-600"
-                    : "bg-indigo-100 text-indigo-600"
-                }`}
+                className={`ml-2 px-2 py-0.5 text-xs rounded-full font-semibold
+                  ${
+                    event.type === "contest"
+                      ? "bg-orange-100 text-orange-600"
+                      : event.type === "certificate"
+                      ? "bg-green-100 text-green-600"
+                      : "bg-indigo-100 text-indigo-600"
+                  }`}
               >
                 {event.type === "contest"
                   ? "공모전"
