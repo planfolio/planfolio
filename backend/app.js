@@ -14,8 +14,29 @@ const port = process.env.PORT || 3000;
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// CORS 설정 (모든 도메인 허용)
-app.use(cors());
+// CORS 설정 (환경변수 + 기본값 합치기)
+const defaultOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+];
+
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+  : [];
+
+const allowedOrigins = [...defaultOrigins, ...envOrigins];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  })
+);
 
 app.use(cookieParser());
 app.use(express.json());
