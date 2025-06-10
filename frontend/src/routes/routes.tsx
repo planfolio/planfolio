@@ -5,21 +5,18 @@ import CalendarPage from "../pages/calendar";
 import ContestPage from "../pages/contest";
 import CodingTestPage from "../pages/codingtest";
 import CertificatesPage from "../pages/certificates";
+import LoginPage from "../pages/Login";
+import SignupPage from "../pages/Signup";
 
-interface AppRoutesProps {
-  isAuthenticated: boolean;
-}
-
-const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthenticated }) => (
+const AppRoutes: React.FC = () => (
   <Routes>
     <Route path="/" element={<Home />} />
-    <Route
-      path="/calendar"
-      element={<CalendarPage isAuthenticated={isAuthenticated} />}
-    />
+    <Route path="/calendar" element={<CalendarPage />} />
     <Route path="/contests" element={<ContestPage />} />
     <Route path="/coding-tests" element={<CodingTestPage />} />
     <Route path="/certificates" element={<CertificatesPage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/signup" element={<SignupPage />} />
   </Routes>
 );
 

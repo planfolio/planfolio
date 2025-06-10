@@ -1,24 +1,24 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore";
 
-interface AuthButtonsProps {
-  isAuthenticated: boolean;
-  onLoginClick: () => void;
-  onSignupClick: () => void;
-  onLogoutClick?: () => void;
-}
+const AuthButtons: React.FC = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
 
-const AuthButtons: React.FC<AuthButtonsProps> = ({
-  isAuthenticated,
-  onLoginClick,
-  onSignupClick,
-  onLogoutClick,
-}) => {
+  const handleLoginClick = () => navigate("/login");
+  const handleSignupClick = () => navigate("/signup");
+  const handleLogoutClick = () => {
+    logout();
+    navigate("/"); // 로그아웃 후 홈으로 이동 등
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex items-center gap-3">
-        {/* 로그인 버튼: 기존 단색 오렌지 */}
         <button
-          onClick={onLoginClick}
+          onClick={handleLoginClick}
           className="
             px-5 py-2 text-sm font-pre font-semibold text-white
             bg-orange-500 rounded-full hover:bg-orange-600
@@ -28,9 +28,8 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
         >
           로그인
         </button>
-        {/* 회원가입 버튼: 글래스모피즘 스타일 */}
         <button
-          onClick={onSignupClick}
+          onClick={handleSignupClick}
           className="
             px-5 py-2 text-sm font-pre font-semibold text-orange-500
             bg-white/70 backdrop-blur-md border border-orange-300
@@ -43,10 +42,9 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
       </div>
     );
   }
-  // 로그인 상태: 로그아웃 버튼만
   return (
     <button
-      onClick={onLogoutClick}
+      onClick={handleLogoutClick}
       className="
         px-5 py-2 text-sm font-pre font-semibold text-orange-500
         bg-white/70 backdrop-blur-md border border-orange-300
