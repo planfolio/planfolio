@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import api from "../api/axiosInstance"; // 경로는 실제 위치에 맞게 조정
+import api from "../api/axiosInstance";
+import { useAuthStore } from "./useAuthStore"; // 인증 상태 구독
 
 export interface CalendarEvent {
   id: number;
@@ -16,7 +17,6 @@ interface CalendarState {
   error: string | null;
   fetchEvents: () => Promise<void>;
   addEvent: (event: Omit<CalendarEvent, "id">) => Promise<void>;
-  // 필요에 따라 updateEvent, deleteEvent 등 추가 가능
 }
 
 export const useCalendarStore = create<CalendarState>((set) => ({
@@ -27,6 +27,11 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   fetchEvents: async () => {
     set({ isLoading: true, error: null });
     try {
+      const isAuthenticated = useAuthStore.getState().isAuthenticated;
+      if (!isAuthenticated) {
+        set({ events: [], isLoading: false });
+        return;
+      }
       const res = await api.get("/calendar");
       set({ events: res.data.events, isLoading: false });
     } catch (err) {
