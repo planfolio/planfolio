@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../api/axiosInstance";
+import { useCalendarStore } from "./useCalendarStore";
 
 interface User {
   id: number;
@@ -97,7 +98,9 @@ export const useAuthStore = create<AuthState>()(
         document.cookie =
           "token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;";
 
-        console.log("로그아웃 완료");
+        useCalendarStore.getState().clearEvents();
+
+        alert("로그아웃 되었습니다.");
       },
 
       // 사용자 정보 조회

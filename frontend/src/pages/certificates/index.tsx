@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import EventFilter from "../../components/EventComponent/EventFilter";
 import EventListItem from "../../components/EventComponent/EventListItem";
 import { useCertificateStore } from "../../store/useCertificatesStore";
+import { useCalendarStore } from "../../store/useCalendarStore";
 import { useAuthStore } from "../../store/useAuthStore";
 
 const EXCLUDE_TAGS = ["시험", "필기", "실기", "원서접수"];
@@ -21,63 +22,110 @@ const MAIN_CERT_TAGS = [
 const CertificatesPage: React.FC = () => {
   const { qualifications, isLoading, fetchQualifications } =
     useCertificateStore();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const addEvent = useCalendarStore((s) => s.addEvent);
+  const deleteEvent = useCalendarStore((s) => s.deleteEvent);
+  const calendarEvents = useCalendarStore((s) => s.events);
+  const fetchEvents = useCalendarStore((s) => s.fetchEvents);
   const navigate = useNavigate();
+
   const [selected, setSelected] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
 
+  // 1) 자격증 목록
   useEffect(() => {
     fetchQualifications();
   }, [fetchQualifications]);
 
+  // 2) 마운트 시 한 번만 내 캘린더 일정 가져오기
   useEffect(() => {
-    // 태그 추출 및 정제
+    fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 3) 필터 태그 세팅
+  useEffect(() => {
     const tagSet = new Set<string>();
-    qualifications.forEach((qual) => {
+    qualifications.forEach((qual) =>
       qual.tags
         .replace(/\//g, ",")
         .split(",")
-        .map((tag) => tag.trim())
+        .map((t) => t.trim())
         .forEach((tag) => {
           if (
             tag &&
-            tag.length > 0 &&
             !EXCLUDE_TAGS.includes(tag) &&
             MAIN_CERT_TAGS.includes(tag)
           ) {
             tagSet.add(tag);
           }
-        });
-    });
+        })
+    );
     setFilterTags(Array.from(tagSet));
   }, [qualifications]);
 
   const handleFilterChange = (tag: string) => {
-    if (tag === "전체") {
-      setSelected([]);
-    } else {
-      setSelected((prev) => {
-        const next = prev.includes(tag)
-          ? prev.filter((t) => t !== tag)
-          : [...prev, tag];
-        return next.length === 0 ? [] : next;
-      });
-    }
+    if (tag === "전체") return setSelected([]);
+    setSelected((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
-  // 북마크(내 캘린더 추가) 핸들러
-  const handleBookmark = useCallback(
-    (qual) => {
+  // 북마크 여부 (날짜는 getTime으로 비교)
+  const isBookmarked = (qual): boolean =>
+    calendarEvents.some(
+      (ev) =>
+        ev.title === qual.title &&
+        new Date(ev.start_date).getTime() ===
+          new Date(qual.start_date).getTime() &&
+        new Date(ev.end_date).getTime() === new Date(qual.end_date).getTime() &&
+        ev.source === "certificate"
+    );
+
+  // 북마크 토글 (추가/제거)
+  const handleToggleBookmark = useCallback(
+    async (qual) => {
       if (!isAuthenticated) {
         alert("로그인이 필요합니다!");
         navigate("/login");
         return;
       }
-      // 북마크 추가 API (예시)
-      // await axios.post("http://localhost:3000/calendar", { ... })
-      alert("내 캘린더에 추가되었습니다!");
+      const already = isBookmarked(qual);
+      try {
+        if (already) {
+          // 추가된 일정의 id 찾기
+          const ev = calendarEvents.find(
+            (ev) =>
+              ev.title === qual.title &&
+              new Date(ev.start_date).getTime() ===
+                new Date(qual.start_date).getTime() &&
+              new Date(ev.end_date).getTime() ===
+                new Date(qual.end_date).getTime() &&
+              ev.source === "certificate"
+          );
+          if (ev) {
+            await deleteEvent(ev.id);
+            alert("캘린더에서 일정이 제거되었습니다.");
+          }
+        } else {
+          await addEvent({
+            title: qual.title,
+            description: qual.description,
+            start_date: qual.start_date,
+            end_date: qual.end_date,
+            source: "certificate",
+          });
+          alert("캘린더에 일정이 추가되었습니다!");
+        }
+        // zustand가 상태를 즉시 갱신하므로 fetchEvents() 불필요
+      } catch (err) {
+        alert(
+          already ? "일정 해제에 실패했습니다." : "일정 추가에 실패했습니다."
+        );
+        console.error(err);
+      }
     },
-    [isAuthenticated, navigate]
+    [isAuthenticated, navigate, addEvent, deleteEvent, calendarEvents]
   );
 
   const filteredQualifications =
@@ -93,7 +141,6 @@ const CertificatesPage: React.FC = () => {
 
   return (
     <div className="certificate-page flex max-w-6xl mx-auto p-6 gap-6 select-none">
-      {/* 좌측: 필터 */}
       <aside className="w-40">
         <div className="bg-white rounded-lg shadow p-4">
           <EventFilter
@@ -103,7 +150,6 @@ const CertificatesPage: React.FC = () => {
           />
         </div>
       </aside>
-      {/* 우측: 리스트 */}
       <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4 select-none">
         {isLoading ? (
           <div className="text-gray-400 text-center py-8">불러오는 중...</div>
@@ -119,7 +165,8 @@ const CertificatesPage: React.FC = () => {
               date={`${qual.start_date} ~ ${qual.end_date}`}
               type={qual.tags}
               description={qual.description}
-              onBookmark={() => handleBookmark(qual)}
+              onBookmark={() => handleToggleBookmark(qual)}
+              isBookmarked={isBookmarked(qual)}
             />
           ))
         )}

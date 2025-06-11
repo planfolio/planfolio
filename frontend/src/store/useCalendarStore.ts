@@ -17,6 +17,8 @@ interface CalendarState {
   error: string | null;
   fetchEvents: () => Promise<void>;
   addEvent: (event: Omit<CalendarEvent, "id">) => Promise<void>;
+  deleteEvent: (id: number) => Promise<void>;
+  clearEvents: () => void;
 }
 
 export const useCalendarStore = create<CalendarState>((set, get) => ({
@@ -25,8 +27,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   error: null,
 
   fetchEvents: async () => {
-    // 이미 로딩 중이면 중복 호출 방지
-    if (get().isLoading) return;
+    if (get().isLoading) return; // 중복 방지
 
     set({ isLoading: true, error: null });
     try {
@@ -36,10 +37,10 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
         return;
       }
       const res = await api.get("/calendar");
-      set({ events: res.data.events || [], isLoading: false });
+      // 서버 응답이 배열 또는 { events: [...] } 형태 모두 대응
+      set({ events: res.data.events || res.data || [], isLoading: false });
     } catch (err: any) {
       console.error("캘린더 데이터 로딩 실패:", err);
-      // 401 인증 오류인 경우 events 초기화
       if (err.response?.status === 401) {
         set({ events: [], isLoading: false, error: null });
       } else {
@@ -53,12 +54,41 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     try {
       const res = await api.post("/calendar", event);
       set((state) => ({
-        events: [...state.events, res.data.event],
+        events: [...state.events, res.data.event], // 서버 응답 객체만 추가
         isLoading: false,
       }));
     } catch (err) {
-      console.error(err);
       set({ error: "일정 추가 실패", isLoading: false });
     }
   },
+
+  updateEvent: async (id, data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await api.put(`/calendar/${id}`, data);
+      set((state) => ({
+        events: state.events.map((ev) =>
+          ev.id === id ? { ...ev, ...res.data.event } : ev
+        ),
+        isLoading: false,
+      }));
+    } catch (err) {
+      set({ isLoading: false, error: "일정 수정 실패" });
+    }
+  },
+
+  deleteEvent: async (id: number) => {
+    set({ isLoading: true, error: null });
+    try {
+      await api.delete(`/calendar/${id}`);
+      set((state) => ({
+        events: state.events.filter((ev) => ev.id !== id),
+        isLoading: false,
+      }));
+    } catch (err) {
+      set({ isLoading: false, error: "일정 삭제 실패" });
+    }
+  },
+
+  clearEvents: () => set({ events: [] }),
 }));
