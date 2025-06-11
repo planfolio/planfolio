@@ -13,6 +13,7 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  hasHydrated: boolean; // ← 인증 복원 완료 플래그
   signup: (data: {
     username: string;
     email: string;
@@ -21,7 +22,7 @@ interface AuthState {
     nickname: string;
   }) => Promise<void>;
   login: (data: { username: string; password: string }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   updateProfile: (
     data: Partial<Pick<User, "nickname" | "profile_image" | "is_public">>
@@ -32,6 +33,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
+  hasHydrated: false, // 초기 상태는 false
 
   signup: async (data) => {
     await api.post("/signup", data);
@@ -48,8 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchMe: async () => {
     try {
       const res = await api.get("/me");
-      console.log("me 응답 :", res.data);
-      if (res.data && res.data.user && res.data.user.username) {
+      if (res.data?.user?.username) {
         set({
           user: {
             id: res.data.user.id,
@@ -64,8 +65,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       } else {
         set({ user: null, isAuthenticated: false });
       }
-    } catch (err) {
+    } catch {
       set({ user: null, isAuthenticated: false });
+    } finally {
+      set({ hasHydrated: true }); // 복원 시도 끝
     }
   },
 
@@ -77,12 +80,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   updateProfile: async (data) => {
     try {
       const res = await api.patch("/users/me", data);
-      if (res.data && res.data.user) {
+      if (res.data?.user) {
         set((state) => ({
-          user: {
-            ...state.user,
-            ...res.data.user, // 최신 정보로 병합
-          },
+          user: { ...state.user, ...res.data.user },
         }));
       }
     } catch (err) {
@@ -90,16 +90,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  changePassword: async (oldPassword: string, newPassword: string) => {
+  changePassword: async (oldPassword, newPassword) => {
     try {
-      const res = await api.patch("/password", {
-        oldPassword,
-        newPassword,
-      });
-      // 성공 메시지 처리(알림 등)
+      const res = await api.patch("/password", { oldPassword, newPassword });
       alert(res.data.message || "비밀번호가 변경되었습니다!");
     } catch (err: any) {
-      // 에러 응답에 따라 메시지 처리
       if (err.response?.status === 403) {
         alert("현재 비밀번호가 올바르지 않습니다.");
       } else if (err.response?.status === 400) {
