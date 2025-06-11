@@ -13,14 +13,17 @@ import { useAuthStore } from "../../store/useAuthStore";
 const FILTERS = ["전체", "공모전", "자격증", "코딩테스트", "개인"];
 
 const CalendarPage: React.FC = () => {
-  const { events, isLoading, fetchEvents, addEvent } = useCalendarStore();
+  const { events, isLoading, fetchEvents } = useCalendarStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [selected, setSelected] = React.useState("전체");
   const navigate = useNavigate();
 
+  // 컴포넌트 마운트 시 한 번만 fetchEvents 호출
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    if (isAuthenticated) {
+      fetchEvents();
+    }
+  }, [isAuthenticated]); // fetchEvents 의존성 제거
 
   const handleAddSchedule = useCallback(() => {
     if (!isAuthenticated) {
@@ -63,24 +66,28 @@ const CalendarPage: React.FC = () => {
       </aside>
       {/* 우측: 캘린더 */}
       <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4">
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin]}
-          initialView="dayGridMonth"
-          height="auto"
-          locale={koLocale}
-          headerToolbar={{
-            left: "dayGridMonth,timeGridWeek,timeGridDay",
-            center: "title",
-            right: "today prev,next",
-          }}
-          events={filteredEvents.map((event) => ({
-            id: event.id,
-            title: event.title,
-            start: event.start_date,
-            end: event.end_date,
-            // 기타 필드도 필요시 추가
-          }))}
-        />
+        {isLoading ? (
+          <div className="text-center py-8 text-gray-500">로딩 중...</div>
+        ) : (
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin]}
+            initialView="dayGridMonth"
+            height="auto"
+            locale={koLocale}
+            headerToolbar={{
+              left: "dayGridMonth,timeGridWeek,timeGridDay",
+              center: "title",
+              right: "today prev,next",
+            }}
+            events={filteredEvents.map((event) => ({
+              id: String(event.id),
+              title: event.title,
+              start: event.start_date,
+              end: event.end_date,
+              // 기타 필드도 필요시 추가
+            }))}
+          />
+        )}
       </section>
     </div>
   );

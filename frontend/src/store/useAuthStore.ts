@@ -249,21 +249,20 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // 실제 로그아웃 처리 함수
-      logout: async () => {
-        // <--- async 키워드를 추가합니다.
-        try {
-          await api.post("/logout"); // <--- 로그아웃 API 호출
-          set({
-            isAuthenticated: false,
-            user: null,
-            authToken: null,
-          });
-        } catch (err) {
-          console.error("로그아웃 실패:", err);
-          // 로그아웃 실패 시에도 UI 상태는 변경하는 것이 일반적
-          set({ isAuthenticated: false, user: null, authToken: null });
-        }
+      // 실제 로그아웃 처리 함수 (프론트엔드에서만 처리)
+      logout: () => {
+        // 로컬 상태만 초기화 (백엔드 API 호출 없음)
+        set({
+          isAuthenticated: false,
+          user: null,
+          authToken: null,
+        });
+
+        // 브라우저의 쿠키도 삭제 (만료 시간을 과거로 설정)
+        document.cookie =
+          "token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;";
+
+        console.log("로그아웃 완료 (프론트엔드 처리)");
       },
 
       // --- fetchMe 함수 구현 (쿠키 기반 인증) ---
