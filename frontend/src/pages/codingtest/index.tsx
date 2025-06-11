@@ -22,7 +22,7 @@ const CodingTestPage: React.FC = () => {
     fetchTests();
   }, [fetchTests]);
 
-  // 내 캘린더 일정은 마운트 시 한 번만 불러옴
+  // 페이지 마운트 시 무조건 서버 동기화 (새로고침 대응)
   useEffect(() => {
     fetchEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,16 +53,37 @@ const CodingTestPage: React.FC = () => {
     }
   };
 
-  // 북마크 여부 (날짜는 getTime으로 비교)
-  const isBookmarked = (test): boolean =>
-    calendarEvents.some(
-      (ev) =>
-        ev.title === test.title &&
-        new Date(ev.start_date).getTime() ===
-          new Date(test.start_date).getTime() &&
-        new Date(ev.end_date).getTime() === new Date(test.end_date).getTime() &&
-        ev.source === "codingtest"
-    );
+  // 북마크 여부 (날짜는 YYYY-MM-DD 형식으로 정규화해서 비교)
+  const isBookmarked = (test): boolean => {
+    return calendarEvents.some((ev) => {
+      const titleMatch = ev.title === test.title;
+
+      // 날짜를 YYYY-MM-DD 형식으로 정규화
+      const normalizeDate = (date) => {
+        if (!date) return null;
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return null;
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
+      };
+
+      const testStartNorm = normalizeDate(test.start_date);
+      const testEndNorm = normalizeDate(test.end_date);
+      const evStartNorm = normalizeDate(ev.start_date);
+      const evEndNorm = normalizeDate(ev.end_date);
+
+      const startMatch = testStartNorm === evStartNorm;
+      const endMatch = testEndNorm === evEndNorm;
+      const sourceMatch = ev.source === "codingtest";
+
+      return titleMatch && startMatch && endMatch && sourceMatch;
+    });
+  };
 
   // 북마크 토글 (추가/제거)
   const handleToggleBookmark = useCallback(
@@ -72,19 +93,43 @@ const CodingTestPage: React.FC = () => {
         navigate("/login");
         return;
       }
+
+      // 🔥 북마크 클릭 시 무조건 서버 상태 새로고침
+      await fetchEvents();
+
+      // 최신 상태로 다시 확인
       const already = isBookmarked(test);
+
       try {
         if (already) {
-          // 추가된 일정의 id 찾기
-          const ev = calendarEvents.find(
-            (ev) =>
+          // 추가된 일정의 id 찾기 (날짜 정규화로 비교)
+          const normalizeDate = (date) => {
+            if (!date) return null;
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return null;
+            return (
+              d.getFullYear() +
+              "-" +
+              String(d.getMonth() + 1).padStart(2, "0") +
+              "-" +
+              String(d.getDate()).padStart(2, "0")
+            );
+          };
+
+          const testStartNorm = normalizeDate(test.start_date);
+          const testEndNorm = normalizeDate(test.end_date);
+
+          const ev = calendarEvents.find((ev) => {
+            const evStartNorm = normalizeDate(ev.start_date);
+            const evEndNorm = normalizeDate(ev.end_date);
+            return (
               ev.title === test.title &&
-              new Date(ev.start_date).getTime() ===
-                new Date(test.start_date).getTime() &&
-              new Date(ev.end_date).getTime() ===
-                new Date(test.end_date).getTime() &&
+              testStartNorm === evStartNorm &&
+              testEndNorm === evEndNorm &&
               ev.source === "codingtest"
-          );
+            );
+          });
+
           if (ev) {
             await deleteEvent(ev.id);
             alert("캘린더에서 일정이 제거되었습니다.");
@@ -99,7 +144,6 @@ const CodingTestPage: React.FC = () => {
           });
           alert("캘린더에 일정이 추가되었습니다!");
         }
-        // zustand가 상태를 즉시 갱신하므로 fetchEvents() 불필요
       } catch (err) {
         alert(
           already ? "일정 해제에 실패했습니다." : "일정 추가에 실패했습니다."
@@ -107,7 +151,14 @@ const CodingTestPage: React.FC = () => {
         console.error(err);
       }
     },
-    [isAuthenticated, navigate, addEvent, deleteEvent, calendarEvents]
+    [
+      isAuthenticated,
+      navigate,
+      addEvent,
+      deleteEvent,
+      calendarEvents,
+      fetchEvents,
+    ]
   );
 
   const filteredTests =

@@ -31,14 +31,10 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const isAuthenticated = useAuthStore.getState().isAuthenticated;
-      if (!isAuthenticated) {
-        set({ events: [], isLoading: false });
-        return;
-      }
       const res = await api.get("/calendar");
       // 서버 응답이 배열 또는 { events: [...] } 형태 모두 대응
-      set({ events: res.data.events || res.data || [], isLoading: false });
+      const events = res.data.events || res.data || [];
+      set({ events, isLoading: false });
     } catch (err: any) {
       console.error("캘린더 데이터 로딩 실패:", err);
       if (err.response?.status === 401) {
