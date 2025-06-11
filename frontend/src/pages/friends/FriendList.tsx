@@ -12,8 +12,8 @@ const FriendList: React.FC = () => {
     fetchFriends,
     fetchPendingRequests,
     sendFriendRequest,
-    acceptFriendRequest,
-    declineFriendRequest,
+    handleFriendRequest,
+    removeFriend, // <--- 추가: removeFriend 함수를 가져옵니다.
   } = useFriendStore();
 
   // useAuthStore에서 인증 상태를 가져옵니다.
@@ -47,6 +47,28 @@ const FriendList: React.FC = () => {
       // 성공 메시지는 useFriendStore에서 alert으로 처리됨
     } catch (error) {
       // 에러 메시지는 useFriendStore에서 alert으로 처리됨
+    }
+  };
+
+  // 친구 요청 수락 핸들러 (handleFriendRequest 사용)
+  const handleAcceptRequest = async (senderUsername: string) => {
+    try {
+      await handleFriendRequest(senderUsername, 'accept');
+      // 성공 시 useFriendStore에서 alert 및 목록 새로고침 처리됨
+    } catch (error) {
+      // 에러 처리 (useFriendStore에서 이미 alert 처리)
+      console.error('친구 요청 수락 실패:', error);
+    }
+  };
+
+  // 친구 요청 거절 핸들러 (handleFriendRequest 사용)
+  const handleDeclineRequest = async (senderUsername: string) => {
+    try {
+      await handleFriendRequest(senderUsername, 'reject');
+      // 성공 시 useFriendStore에서 alert 및 목록 새로고침 처리됨
+    } catch (error) {
+      // 에러 처리 (useFriendStore에서 이미 alert 처리)
+      console.error('친구 요청 거절 실패:', error);
     }
   };
 
@@ -109,22 +131,22 @@ const FriendList: React.FC = () => {
                   <div className="flex items-center">
                     {/* 프로필 이미지 플레이스홀더 */}
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm mr-3">
-                      {request.senderNickname[0]}
+                      {request.user.nickname ? request.user.nickname[0] : 'U'}
                     </div>
                     <div>
-                      <span className="font-semibold text-gray-800">{request.senderNickname}</span>
-                      <span className="text-sm text-gray-500 ml-2">@{request.senderUsername}</span>
+                      <span className="font-semibold text-gray-800">{request.user.nickname}</span>
+                      <span className="text-sm text-gray-500 ml-2">@{request.user.username}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => acceptFriendRequest(request.id)}
+                      onClick={() => handleAcceptRequest(request.user.username)}
                       className="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition text-sm"
                     >
                       수락
                     </button>
                     <button
-                      onClick={() => declineFriendRequest(request.id)}
+                      onClick={() => handleDeclineRequest(request.user.username)}
                       className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition text-sm"
                     >
                       거절
@@ -159,12 +181,21 @@ const FriendList: React.FC = () => {
                       <span className="text-sm text-gray-500 ml-2">@{friend.username}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => navigate(`/friends/${friend.id}/calendar`)} // 친구 캘린더 페이지로 이동
-                    className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition text-sm shadow-md"
-                  >
-                    캘린더 보기
-                  </button>
+                  <div className="flex gap-2"> {/* 버튼들을 감싸는 div 추가 */}
+                    <button
+                      onClick={() => navigate(`/friends/${friend.id}/calendar`)} // 친구 캘린더 페이지로 이동
+                      className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition text-sm shadow-md"
+                    >
+                      캘린더 보기
+                    </button>
+                    {/* 친구 삭제 버튼 추가 */}
+                    <button
+                      onClick={() => removeFriend(friend.username)} // useFriendStore의 removeFriend는 username을 인자로 받습니다.
+                      className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition text-sm shadow-md"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
