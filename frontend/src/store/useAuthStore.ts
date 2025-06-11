@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../api/axiosInstance";
+import { useCalendarStore } from "./useCalendarStore";
 
 interface User {
   id: number;
@@ -22,7 +23,7 @@ interface AuthState {
   login: (data: { username: string; password: string }) => Promise<void>;
   logout: () => void;
   fetchMe: () => Promise<void>;
-  
+
   // 회원가입
   signup: (data: {
     username: string;
@@ -96,7 +97,9 @@ export const useAuthStore = create<AuthState>()(
         document.cookie =
           "token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;";
 
-        console.log("로그아웃 완료");
+        useCalendarStore.getState().clearEvents();
+
+        alert("로그아웃 되었습니다.");
       },
 
       // 사용자 정보 조회
@@ -104,7 +107,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const res = await api.get("/me");
           console.log("me 응답:", res.data);
-          
+
           if (res.data && res.data.user && res.data.user.username) {
             set({
               user: {
@@ -163,7 +166,10 @@ export const useAuthStore = create<AuthState>()(
           } else {
             alert("비밀번호 변경에 실패했습니다.");
           }
-          console.error("비밀번호 변경 실패:", err.response?.data || err.message);
+          console.error(
+            "비밀번호 변경 실패:",
+            err.response?.data || err.message
+          );
           throw err;
         }
       },
@@ -173,9 +179,14 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.post("/find-username", { email });
           console.log("아이디 찾기 요청 성공:", response.data);
-          alert(response.data.message || "아이디 정보를 이메일로 전송했습니다.");
+          alert(
+            response.data.message || "아이디 정보를 이메일로 전송했습니다."
+          );
         } catch (error: any) {
-          console.error("아이디 찾기 실패:", error.response?.data || error.message);
+          console.error(
+            "아이디 찾기 실패:",
+            error.response?.data || error.message
+          );
           alert(error.response?.data?.message || "아이디를 찾을 수 없습니다.");
           throw error;
         }
@@ -184,12 +195,23 @@ export const useAuthStore = create<AuthState>()(
       // 비밀번호 재설정 요청
       requestPasswordReset: async (identifier: string) => {
         try {
-          const response = await api.post("/request-password-reset", { identifier });
+          const response = await api.post("/request-password-reset", {
+            identifier,
+          });
           console.log("비밀번호 재설정 요청 성공:", response.data);
-          alert(response.data.message || "비밀번호 재설정 링크가 이메일로 전송되었습니다.");
+          alert(
+            response.data.message ||
+              "비밀번호 재설정 링크가 이메일로 전송되었습니다."
+          );
         } catch (error: any) {
-          console.error("비밀번호 재설정 요청 실패:", error.response?.data || error.message);
-          alert(error.response?.data?.message || "비밀번호 재설정 요청에 실패했습니다.");
+          console.error(
+            "비밀번호 재설정 요청 실패:",
+            error.response?.data || error.message
+          );
+          alert(
+            error.response?.data?.message ||
+              "비밀번호 재설정 요청에 실패했습니다."
+          );
           throw error;
         }
       },
@@ -212,7 +234,9 @@ export const useAuthStore = create<AuthState>()(
           authToken: tempToken,
         });
 
-        alert("✨ 임시 로그인 되었습니다! 개발용 계정으로 친구 기능을 테스트할 수 있습니다.");
+        alert(
+          "✨ 임시 로그인 되었습니다! 개발용 계정으로 친구 기능을 테스트할 수 있습니다."
+        );
       },
 
       // 임시 로그인 해제

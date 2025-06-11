@@ -17,6 +17,7 @@ interface CalendarState {
   error: string | null;
   fetchEvents: () => Promise<void>;
   addEvent: (event: Omit<CalendarEvent, "id">) => Promise<void>;
+  clearEvents: () => void;
 }
 
 export const useCalendarStore = create<CalendarState>((set, get) => ({
@@ -60,4 +61,6 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set({ error: "일정 추가 실패", isLoading: false });
     }
   },
+
+  clearEvents: () => set({ events: [] }),
 }));
