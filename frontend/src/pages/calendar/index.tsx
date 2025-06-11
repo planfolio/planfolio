@@ -63,48 +63,80 @@ const CalendarPage: React.FC = () => {
         );
 
   return (
-    <div className="flex max-w-6xl mx-auto p-6 gap-6 select-none">
-      {/* 좌측: 필터/일정추가 */}
-      <aside className="w-52">
-        <div className="bg-white rounded-lg shadow p-4 flex flex-col gap-4">
-          <AddScheduleButton onClick={handleAddSchedule} />
-          <ScheduleFilter
-            filters={FILTERS}
-            selected={selected}
-            onSelect={setSelected}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-pink-50">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex gap-6 select-none">
+          {/* 좌측: 필터/일정추가 */}
+          <aside className="w-64">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-100/50 p-6 sticky top-6">
+              <div className="flex flex-col gap-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    📅 내 캘린더
+                  </h2>
+                  <p className="text-sm text-gray-500">일정을 관리해보세요</p>
+                </div>
+                <AddScheduleButton onClick={handleAddSchedule} />
+                <div className="border-t border-gray-100 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wide">
+                    필터
+                  </h3>
+                  <ScheduleFilter
+                    filters={FILTERS}
+                    selected={selected}
+                    onSelect={setSelected}
+                  />
+                </div>
+              </div>
+            </div>
+            {/* 일정 추가 모달 */}
+            {modalOpen && (
+              <AddScheduleModal onClose={() => setModalOpen(false)} />
+            )}
+          </aside>
+
+          {/* 우측: 캘린더 */}
+          <section className="flex-1 min-w-0">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-100/50 p-6">
+              {isLoading ? (
+                <div className="text-center py-16">
+                  <div className="inline-flex items-center gap-3 text-gray-500">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-orange-300 border-t-orange-500"></div>
+                    <span className="text-lg">로딩 중...</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="calendar-container">
+                  <FullCalendar
+                    plugins={[dayGridPlugin, timeGridPlugin]}
+                    initialView="dayGridMonth"
+                    height="auto"
+                    locale={koLocale}
+                    headerToolbar={{
+                      left: "dayGridMonth,timeGridWeek,timeGridDay",
+                      center: "title",
+                      right: "today prev,next",
+                    }}
+                    events={filteredEvents.map((event) => ({
+                      id: String(event.id),
+                      title: event.title,
+                      start: event.start_date,
+                      end: event.end_date,
+                    }))}
+                    eventClick={(info) => {
+                      const ev = events.find(
+                        (e) => String(e.id) === info.event.id
+                      );
+                      setSelectedEvent(ev);
+                      setDetailModalOpen(true);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </section>
         </div>
-        {/* 일정 추가 모달 */}
-        {modalOpen && <AddScheduleModal onClose={() => setModalOpen(false)} />}
-      </aside>
-      {/* 우측: 캘린더 */}
-      <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4">
-        {isLoading ? (
-          <div className="text-center py-8 text-gray-500">로딩 중...</div>
-        ) : (
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin]}
-            initialView="dayGridMonth"
-            height="auto"
-            locale={koLocale}
-            headerToolbar={{
-              left: "dayGridMonth,timeGridWeek,timeGridDay",
-              center: "title",
-              right: "today prev,next",
-            }}
-            events={filteredEvents.map((event) => ({
-              id: String(event.id),
-              title: event.title,
-              start: event.start_date,
-              end: event.end_date,
-            }))}
-            eventClick={(info) => {
-              const ev = events.find((e) => String(e.id) === info.event.id);
-              setSelectedEvent(ev);
-              setDetailModalOpen(true);
-            }}
-          />
-        )}
+
         {/* 일정 상세 모달 */}
         {detailModalOpen && selectedEvent && (
           <ScheduleDetailModal
@@ -124,7 +156,7 @@ const CalendarPage: React.FC = () => {
             onClose={() => setEditModalOpen(false)}
           />
         )}
-      </section>
+      </div>
     </div>
   );
 };
