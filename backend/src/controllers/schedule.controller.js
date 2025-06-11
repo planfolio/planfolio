@@ -75,6 +75,9 @@ exports.getFriendSchedules = async (req, res) => {
     if (rows === null)
       return res.status(403).json({ message: '친구가 아닙니다' });
 
+    if (Array.isArray(rows) && rows.length === 0)
+      return res.status(404).json({ message: '일정이 없습니다' });
+
     res.json({ schedules: rows });
   } catch (err) {
     console.error(err);
