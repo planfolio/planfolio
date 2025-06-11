@@ -13,8 +13,7 @@ exports.getMySchedules = async (req, res) => {
   const source = req.query.source;
   try {
     const rows = await getSchedulesByUser(req.user.id, source);
-    // id 숨기기
-    const events = rows.map(({ id, ...rest }) => rest);
+    const events = rows.map(({  ...rest }) => rest);
     res.json(events);
   } catch (err) {
     console.error(err);
@@ -33,7 +32,7 @@ exports.createSchedule = async (req, res) => {
       title, description, source, start_date, end_date,
     });
     const event = await getScheduleById(id, req.user.id);
-    const { id: _ignored, user_id, created_at, ...publicEvent } = event;
+    const { user_id, created_at, ...publicEvent } = event;
     res.status(201).json({ message: '일정 생성', event: publicEvent });
   } catch (err) {
     console.error(err);
@@ -48,7 +47,7 @@ exports.updateSchedule = async (req, res) => {
   if (!changed) return res.status(404).json({ message: '일정 없음' });
 
   const event = await getScheduleById(id, req.user.id);
-  const { id: _ignored, user_id, created_at, ...publicEvent } = event;
+  const { user_id, created_at, ...publicEvent } = event;
   res.json({ message: '수정 완료', event: publicEvent });
 };
 
