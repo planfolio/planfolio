@@ -42,7 +42,7 @@ interface FriendState {
   fetchPendingRequests: () => Promise<void>;
   sendFriendRequest: (targetUsername: string) => Promise<void>;
   handleFriendRequest: (senderUsername: string, action: 'accept' | 'reject') => Promise<void>; // 수락/거절 통합
-  removeFriend: (friendUsername: string) => Promise<void>; // 친구 삭제
+  removeFriend: (friendUsername: string) => Promise<void>; // 친구 삭제 // <--- 추가
   getFriendCalendar: (friendId: number) => Promise<FriendCalendarEntry[]>;
 }
 
@@ -115,7 +115,7 @@ export const useFriendStore = create<FriendState>((set, get) => ({
     }
   },
 
-  // 10. 친구 삭제 (DELETE /friends/:username)
+  // 10. 친구 삭제 (DELETE /friends/:username) // <--- 친구 삭제 함수 추가 시작
   removeFriend: async (friendUsername: string) => {
     try {
       const response = await api.delete(`/friends/${friendUsername}`);
@@ -131,7 +131,7 @@ export const useFriendStore = create<FriendState>((set, get) => ({
       alert(errorMessage);
       throw error;
     }
-  },
+  }, // <--- 친구 삭제 함수 추가 끝
 
   // 캘린더 관련 API는 기존과 유사
   // (API 명세에 따로 언급이 없었지만, `/friends/:friendId/calendar`는 유지한다고 가정)
