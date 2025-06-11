@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import api from "../api/axiosInstance";
+import { deleteCookie } from "../utils/deleteCookie";
 
 interface User {
   id: number;
@@ -47,6 +48,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     await useAuthStore.getState().fetchMe();
   },
 
+  logout: async () => {
+    // 서버에도 로그아웃 요청이 필요하다면 추가
+    // await api.post("/logout");
+    // 쿠키 삭제
+    deleteCookie("token"); // 쿠키 이름이 'token'일 때
+    set({ user: null, isAuthenticated: false });
+  },
+
   fetchMe: async () => {
     try {
       const res = await api.get("/me");
@@ -73,7 +82,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await api.post("/logout");
+    // 쿠키 삭제 (token 쿠키 이름이 맞는지 확인!)
+    deleteCookie("token");
     set({ user: null, isAuthenticated: false });
   },
 
