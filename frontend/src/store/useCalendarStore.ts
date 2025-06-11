@@ -25,8 +25,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   error: null,
 
   fetchEvents: async () => {
-    // 이미 로딩 중이면 중복 호출 방지
-    if (get().isLoading) return;
+    if (get().isLoading) return; // 중복 방지
 
     set({ isLoading: true, error: null });
     try {
@@ -36,10 +35,10 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
         return;
       }
       const res = await api.get("/calendar");
-      set({ events: res.data.events || [], isLoading: false });
+      // 서버 응답이 배열 또는 { events: [...] } 형태 모두 대응
+      set({ events: res.data.events || res.data || [], isLoading: false });
     } catch (err: any) {
       console.error("캘린더 데이터 로딩 실패:", err);
-      // 401 인증 오류인 경우 events 초기화
       if (err.response?.status === 401) {
         set({ events: [], isLoading: false, error: null });
       } else {

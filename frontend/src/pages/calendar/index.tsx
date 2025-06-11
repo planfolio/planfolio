@@ -1,9 +1,10 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import koLocale from "@fullcalendar/core/locales/ko";
 import AddScheduleButton from "../../components/Calendar/AddScheduleButton";
+import AddScheduleModal from "../../components/Modal/AddScheduleModal";
 import ScheduleFilter from "../../components/Calendar/ScheduleFilter";
 import "../../styles/FullCalendar.css";
 import { useNavigate } from "react-router-dom";
@@ -15,15 +16,15 @@ const FILTERS = ["전체", "공모전", "자격증", "코딩테스트", "개인"
 const CalendarPage: React.FC = () => {
   const { events, isLoading, fetchEvents } = useCalendarStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const [selected, setSelected] = React.useState("전체");
+  const [selected, setSelected] = useState("전체");
+  const [modalOpen, setModalOpen] = useState(false); // 모달 상태 추가
   const navigate = useNavigate();
 
-  // 컴포넌트 마운트 시 한 번만 fetchEvents 호출
   useEffect(() => {
     if (isAuthenticated) {
       fetchEvents();
     }
-  }, [isAuthenticated]); // fetchEvents 의존성 제거
+  }, [isAuthenticated, fetchEvents]);
 
   const handleAddSchedule = useCallback(() => {
     if (!isAuthenticated) {
@@ -31,12 +32,9 @@ const CalendarPage: React.FC = () => {
       navigate("/login");
       return;
     }
-    // 예시: 일정 추가 폼/모달 띄우고, 완료 시 addEvent 호출
-    // addEvent({ title, description, start_date, end_date, source: "manual" });
-    alert("일정 추가 폼/모달이 열립니다!");
-  }, [isAuthenticated, navigate /*, addEvent*/]);
+    setModalOpen(true); // 버튼 클릭 시 모달 오픈
+  }, [isAuthenticated, navigate]);
 
-  // 필터링 (예시: source 기준)
   const filteredEvents =
     selected === "전체"
       ? events
@@ -63,6 +61,8 @@ const CalendarPage: React.FC = () => {
             onSelect={setSelected}
           />
         </div>
+        {/* 일정 추가 모달 */}
+        {modalOpen && <AddScheduleModal onClose={() => setModalOpen(false)} />}
       </aside>
       {/* 우측: 캘린더 */}
       <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4">
@@ -84,7 +84,7 @@ const CalendarPage: React.FC = () => {
               title: event.title,
               start: event.start_date,
               end: event.end_date,
-              // 기타 필드도 필요시 추가
+              color: event.color, // 색상도 전달
             }))}
           />
         )}
