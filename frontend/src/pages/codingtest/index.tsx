@@ -3,21 +3,32 @@ import { useNavigate } from "react-router-dom";
 import EventFilter from "../../components/EventComponent/EventFilter";
 import EventListItem from "../../components/EventComponent/EventListItem";
 import { useCodingTestStore } from "../../store/useCodingTestStore";
+import { useCalendarStore } from "../../store/useCalendarStore";
 import { useAuthStore } from "../../store/useAuthStore";
 
 const CodingTestPage: React.FC = () => {
   const { tests, isLoading, fetchTests } = useCodingTestStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const addEvent = useCalendarStore((state) => state.addEvent);
+  const deleteEvent = useCalendarStore((state) => state.deleteEvent);
+  const calendarEvents = useCalendarStore((state) => state.events);
+  const fetchEvents = useCalendarStore((state) => state.fetchEvents);
+  const navigate = useNavigate();
+
   const [selected, setSelected] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTests();
   }, [fetchTests]);
 
+  // 내 캘린더 일정은 마운트 시 한 번만 불러옴
   useEffect(() => {
-    // 모든 tags를 중복 없이 추출
+    fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const tagSet = new Set<string>();
     tests.forEach((test) => {
       test.tags
@@ -42,19 +53,61 @@ const CodingTestPage: React.FC = () => {
     }
   };
 
-  // 북마크(내 캘린더 추가) 핸들러
-  const handleBookmark = useCallback(
-    (test) => {
+  // 북마크 여부 (날짜는 getTime으로 비교)
+  const isBookmarked = (test): boolean =>
+    calendarEvents.some(
+      (ev) =>
+        ev.title === test.title &&
+        new Date(ev.start_date).getTime() ===
+          new Date(test.start_date).getTime() &&
+        new Date(ev.end_date).getTime() === new Date(test.end_date).getTime() &&
+        ev.source === "codingtest"
+    );
+
+  // 북마크 토글 (추가/제거)
+  const handleToggleBookmark = useCallback(
+    async (test) => {
       if (!isAuthenticated) {
         alert("로그인이 필요합니다!");
         navigate("/login");
         return;
       }
-      // 북마크 추가 API (예시)
-      // await axios.post("http://localhost:3000/calendar", { ... })
-      alert("내 캘린더에 추가되었습니다!");
+      const already = isBookmarked(test);
+      try {
+        if (already) {
+          // 추가된 일정의 id 찾기
+          const ev = calendarEvents.find(
+            (ev) =>
+              ev.title === test.title &&
+              new Date(ev.start_date).getTime() ===
+                new Date(test.start_date).getTime() &&
+              new Date(ev.end_date).getTime() ===
+                new Date(test.end_date).getTime() &&
+              ev.source === "codingtest"
+          );
+          if (ev) {
+            await deleteEvent(ev.id);
+            alert("캘린더에서 일정이 제거되었습니다.");
+          }
+        } else {
+          await addEvent({
+            title: test.title,
+            description: test.description,
+            start_date: test.start_date,
+            end_date: test.end_date,
+            source: "codingtest",
+          });
+          alert("캘린더에 일정이 추가되었습니다!");
+        }
+        // zustand가 상태를 즉시 갱신하므로 fetchEvents() 불필요
+      } catch (err) {
+        alert(
+          already ? "일정 해제에 실패했습니다." : "일정 추가에 실패했습니다."
+        );
+        console.error(err);
+      }
     },
-    [isAuthenticated, navigate]
+    [isAuthenticated, navigate, addEvent, deleteEvent, calendarEvents]
   );
 
   const filteredTests =
@@ -80,7 +133,6 @@ const CodingTestPage: React.FC = () => {
           />
         </div>
       </aside>
-
       {/* 우측: 리스트 */}
       <section className="flex-1 min-w-0 bg-white rounded-lg shadow p-4 select-none">
         {isLoading ? (
@@ -97,7 +149,8 @@ const CodingTestPage: React.FC = () => {
               date={`${test.start_date} ~ ${test.end_date}`}
               type={test.tags}
               description={test.description}
-              onBookmark={() => handleBookmark(test)}
+              onBookmark={() => handleToggleBookmark(test)}
+              isBookmarked={isBookmarked(test)}
             />
           ))
         )}

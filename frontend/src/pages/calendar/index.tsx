@@ -5,6 +5,8 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import koLocale from "@fullcalendar/core/locales/ko";
 import AddScheduleButton from "../../components/Calendar/AddScheduleButton";
 import AddScheduleModal from "../../components/Modal/AddScheduleModal";
+import ScheduleDetailModal from "../../components/Modal/ScheduleDetailModal";
+import EditScheduleModal from "../../components/Modal/EditScehduleModal";
 import ScheduleFilter from "../../components/Calendar/ScheduleFilter";
 import "../../styles/FullCalendar.css";
 import { useNavigate } from "react-router-dom";
@@ -14,10 +16,13 @@ import { useAuthStore } from "../../store/useAuthStore";
 const FILTERS = ["전체", "공모전", "자격증", "코딩테스트", "개인"];
 
 const CalendarPage: React.FC = () => {
-  const { events, isLoading, fetchEvents } = useCalendarStore();
+  const { events, isLoading, fetchEvents, deleteEvent } = useCalendarStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [selected, setSelected] = useState("전체");
-  const [modalOpen, setModalOpen] = useState(false); // 모달 상태 추가
+  const [modalOpen, setModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,8 +37,16 @@ const CalendarPage: React.FC = () => {
       navigate("/login");
       return;
     }
-    setModalOpen(true); // 버튼 클릭 시 모달 오픈
+    setModalOpen(true);
   }, [isAuthenticated, navigate]);
+
+  // 삭제 핸들러
+  const handleDelete = async () => {
+    if (selectedEvent && window.confirm("정말 일정을 삭제하시겠습니까?")) {
+      await deleteEvent(selectedEvent.id);
+      setDetailModalOpen(false);
+    }
+  };
 
   const filteredEvents =
     selected === "전체"
@@ -84,8 +97,31 @@ const CalendarPage: React.FC = () => {
               title: event.title,
               start: event.start_date,
               end: event.end_date,
-              color: event.color, // 색상도 전달
             }))}
+            eventClick={(info) => {
+              const ev = events.find((e) => String(e.id) === info.event.id);
+              setSelectedEvent(ev);
+              setDetailModalOpen(true);
+            }}
+          />
+        )}
+        {/* 일정 상세 모달 */}
+        {detailModalOpen && selectedEvent && (
+          <ScheduleDetailModal
+            event={selectedEvent}
+            onClose={() => setDetailModalOpen(false)}
+            onEdit={() => {
+              setDetailModalOpen(false);
+              setEditModalOpen(true);
+            }}
+            onDelete={handleDelete}
+          />
+        )}
+        {/* 일정 수정 모달 */}
+        {editModalOpen && selectedEvent && (
+          <EditScheduleModal
+            event={selectedEvent}
+            onClose={() => setEditModalOpen(false)}
           />
         )}
       </section>

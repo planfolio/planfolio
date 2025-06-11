@@ -38,6 +38,7 @@ interface AuthState {
     data: Partial<Pick<User, "nickname" | "profile_image" | "is_public">>
   ) => Promise<void>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 
   // 계정 찾기/복구
   findUsername: (email: string) => Promise<void>;
@@ -170,6 +171,30 @@ export const useAuthStore = create<AuthState>()(
             "비밀번호 변경 실패:",
             err.response?.data || err.message
           );
+          throw err;
+        }
+      },
+
+      // 회원 탈퇴
+      deleteAccount: async () => {
+        try {
+          const res = await api.delete("/me");
+
+          // 탈퇴 성공 시 로그아웃 처리
+          set({
+            isAuthenticated: false,
+            user: null,
+            authToken: null,
+          });
+
+          // 브라우저의 쿠키도 삭제
+          document.cookie =
+            "token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;";
+
+          alert(res.data.message || "탈퇴가 완료되었습니다.");
+        } catch (err: any) {
+          console.error("회원 탈퇴 실패:", err.response?.data || err.message);
+          alert(err.response?.data?.message || "회원 탈퇴에 실패했습니다.");
           throw err;
         }
       },

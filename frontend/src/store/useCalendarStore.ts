@@ -17,6 +17,7 @@ interface CalendarState {
   error: string | null;
   fetchEvents: () => Promise<void>;
   addEvent: (event: Omit<CalendarEvent, "id">) => Promise<void>;
+  deleteEvent: (id: number) => Promise<void>;
   clearEvents: () => void;
 }
 
@@ -53,12 +54,39 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     try {
       const res = await api.post("/calendar", event);
       set((state) => ({
-        events: [...state.events, res.data.event],
+        events: [...state.events, res.data.event], // 서버 응답 객체만 추가
         isLoading: false,
       }));
     } catch (err) {
-      console.error(err);
       set({ error: "일정 추가 실패", isLoading: false });
+    }
+  },
+
+  updateEvent: async (id, data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await api.put(`/calendar/${id}`, data);
+      set((state) => ({
+        events: state.events.map((ev) =>
+          ev.id === id ? { ...ev, ...res.data.event } : ev
+        ),
+        isLoading: false,
+      }));
+    } catch (err) {
+      set({ isLoading: false, error: "일정 수정 실패" });
+    }
+  },
+
+  deleteEvent: async (id: number) => {
+    set({ isLoading: true, error: null });
+    try {
+      await api.delete(`/calendar/${id}`);
+      set((state) => ({
+        events: state.events.filter((ev) => ev.id !== id),
+        isLoading: false,
+      }));
+    } catch (err) {
+      set({ isLoading: false, error: "일정 삭제 실패" });
     }
   },
 
