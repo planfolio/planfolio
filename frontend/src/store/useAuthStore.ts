@@ -171,9 +171,9 @@
 // }));
 
 // src/store/useAuthStore.ts
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import api from '../api/axiosInstance'; // <--- 이 줄이 없었다면 꼭 추가해주세요! Axios 인스턴스 경로
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import api from "../api/axiosInstance"; // <--- 이 줄이 없었다면 꼭 추가해주세요! Axios 인스턴스 경로
 
 // 사용자 정보 인터페이스 (실제 백엔드 응답과 일치해야 합니다)
 interface User {
@@ -191,13 +191,14 @@ interface AuthState {
   user: User | null;
   authToken: string | null; // JWT 토큰을 저장할 필드
 
-  login: (token: string, userData: User) => void;
+  login: (data: { username: string; password: string }) => Promise<void>;
   logout: () => void;
   // checkAuth: () => void; // (이전 코드에 있었다면) 앱 로드 시 로컬 스토리지 확인 함수
 
   // --- 새로 추가될 액션 함수들의 타입 정의 ---
   fetchMe: () => Promise<void>; // <--- 여기에 fetchMe 함수의 타입을 추가합니다!
-  signup: (data: { // MyPage에서 직접 호출되진 않지만 useAuthStore에 있으므로 타입 추가
+  signup: (data: {
+    // MyPage에서 직접 호출되진 않지만 useAuthStore에 있으므로 타입 추가
     username: string;
     email: string;
     password: string;
@@ -209,46 +210,48 @@ interface AuthState {
   // temporaryLogin과 clearTemporaryLogin도 마찬가지.
   findUsername: (email: string) => Promise<void>;
   requestPasswordReset: (identifier: string) => Promise<void>;
-  updateProfile: (data: Partial<Pick<User, "nickname" | "profile_image" | "is_public">>) => Promise<void>;
+  updateProfile: (
+    data: Partial<Pick<User, "nickname" | "profile_image" | "is_public">>
+  ) => Promise<void>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 구조 유지)
+export const useAuthStore = create<AuthState>()(
+  // AuthState만 사용 (기존 구조 유지)
   persist(
-    (set, get) => ({ // <--- get 함수를 사용하기 위해 두 번째 인자로 'get'을 추가합니다.
+    (set, get) => ({
+      // <--- get 함수를 사용하기 위해 두 번째 인자로 'get'을 추가합니다.
       isAuthenticated: false,
       user: null,
       authToken: null,
 
-      // 실제 로그인 처리 함수 (이전 대화에서 업데이트된 방식으로 반영)
+      // 실제 로그인 처리 함수 (쿠키 기반 인증)
       login: async (data: { username: string; password: string }) => {
         try {
           const res = await api.post("/login", {
             identifier: data.username,
             password: data.password,
           });
-          // 백엔드에서 토큰과 사용자 정보를 응답한다고 가정 (res.data.token, res.data.user)
-          if (res.data.token && res.data.user) {
-             set({
-                 isAuthenticated: true,
-                 user: res.data.user,
-                 authToken: res.data.token,
-             });
-             // 로그인 성공 후 fetchMe를 호출하여 사용자 세부 정보를 다시 가져옵니다.
-             // 이 로직은 AuthButtons의 로그인 성공 후 navigate('/') 직전에 호출되어야 합니다.
-             // 또는 여기에 직접 await get().fetchMe(); 를 추가할 수 있습니다.
-             // 여기서는 간결하게 set만 하고, AuthButtons 같은 곳에서 fetchMe를 호출하도록 합니다.
+
+          // 로그인 성공 시 (토큰은 쿠키로 자동 설정됨)
+          if (res.data.message === "Login successful") {
+            // /me API를 호출하여 사용자 정보 가져오기
+            await get().fetchMe();
           } else {
-              throw new Error("로그인 응답에 사용자 정보 또는 토큰이 없습니다.");
+            throw new Error("로그인 실패");
           }
         } catch (err: any) {
-          console.error("로그인 API 호출 실패:", err.response?.data || err.message);
+          console.error(
+            "로그인 API 호출 실패:",
+            err.response?.data || err.message
+          );
           throw err;
         }
       },
 
       // 실제 로그아웃 처리 함수
-      logout: async () => { // <--- async 키워드를 추가합니다.
+      logout: async () => {
+        // <--- async 키워드를 추가합니다.
         try {
           await api.post("/logout"); // <--- 로그아웃 API 호출
           set({
@@ -263,30 +266,20 @@ export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 
         }
       },
 
-      // --- 새로 추가될 fetchMe 함수 구현 ---
+      // --- fetchMe 함수 구현 (쿠키 기반 인증) ---
       fetchMe: async () => {
         try {
-          const currentToken = get().authToken; // <--- get()을 통해 현재 스토어의 authToken을 가져옵니다.
-          if (!currentToken) {
-            // 토큰이 없으면 로그인 상태가 아님
-            set({ user: null, isAuthenticated: false, authToken: null });
-            return;
-          }
-
-          const res = await api.get('/me', { // 백엔드의 사용자 정보 API 엔드포인트
-            headers: {
-              Authorization: `Bearer ${currentToken}`, // 토큰을 Authorization 헤더에 포함
-            },
-          });
+          // 쿠키에 토큰이 있을 때만 요청 (withCredentials: true로 자동 전송)
+          const res = await api.get("/me");
 
           if (res.data && res.data.user) {
             set({
               user: res.data.user,
               isAuthenticated: true,
-              authToken: currentToken, // 토큰은 유지
+              authToken: null, // 쿠키 기반이므로 토큰은 따로 저장하지 않음
             });
           } else {
-            // API 응답에 user 정보가 없거나 유효하지 않으면 로그인 상태 해제
+            // API 응답에 user 정보가 없으면 로그인 상태 해제
             set({ user: null, isAuthenticated: false, authToken: null });
           }
         } catch (error) {
@@ -300,13 +293,13 @@ export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 
       temporaryLogin: () => {
         const dummyUser: User = {
           id: 999, // 임시 사용자를 위한 고유 ID (충돌 방지)
-          username: 'temp_user_001',
-          nickname: '임시사용자',
-          email: 'temp@example.com', // 임시 사용자 이메일 추가
+          username: "temp_user_001",
+          nickname: "임시사용자",
+          email: "temp@example.com", // 임시 사용자 이메일 추가
           profile_image: null,
-          name: '임시 이름', // MyPage에서 user.name을 사용하므로 추가
+          name: "임시 이름", // MyPage에서 user.name을 사용하므로 추가
         };
-        const tempToken = 'mock-jwt-token-for-development-only';
+        const tempToken = "mock-jwt-token-for-development-only";
 
         set({
           isAuthenticated: true,
@@ -314,7 +307,9 @@ export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 
           authToken: tempToken, // 임시 토큰도 저장하도록 설정
         });
 
-        alert('✨ 임시 로그인 되었습니다! 개발용 계정으로 친구 기능을 테스트할 수 있습니다.');
+        alert(
+          "✨ 임시 로그인 되었습니다! 개발용 계정으로 친구 기능을 테스트할 수 있습니다."
+        );
       },
 
       // 임시 로그인 해제 함수
@@ -324,7 +319,7 @@ export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 
           user: null,
           authToken: null,
         });
-        alert('❌ 임시 로그인이 해제되었습니다.');
+        alert("❌ 임시 로그인이 해제되었습니다.");
       },
 
       // --- 기존의 다른 액션 함수들 (MyPage에서 직접 호출되지 않지만, AuthState에 정의되어 있어야 함) ---
@@ -340,21 +335,40 @@ export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 
         try {
           const response = await api.post("/find-username", { email });
           console.log("아이디 찾기 요청 성공:", response.data);
-          alert(response.data.message || "아이디 정보를 이메일로 전송했습니다.");
+          alert(
+            response.data.message || "아이디 정보를 이메일로 전송했습니다."
+          );
         } catch (error: any) {
-          console.error("아이디 찾기 API 호출 실패:", error.response?.data || error.message);
-          alert(error.response?.data?.message || "아이디를 찾을 수 없습니다. 이메일을 다시 확인해주세요.");
+          console.error(
+            "아이디 찾기 API 호출 실패:",
+            error.response?.data || error.message
+          );
+          alert(
+            error.response?.data?.message ||
+              "아이디를 찾을 수 없습니다. 이메일을 다시 확인해주세요."
+          );
           throw error;
         }
       },
       requestPasswordReset: async (identifier: string) => {
         try {
-          const response = await api.post("/request-password-reset", { identifier });
+          const response = await api.post("/request-password-reset", {
+            identifier,
+          });
           console.log("비밀번호 재설정 요청 성공:", response.data);
-          alert(response.data.message || "비밀번호 재설정 링크가 이메일로 전송되었습니다.");
+          alert(
+            response.data.message ||
+              "비밀번호 재설정 링크가 이메일로 전송되었습니다."
+          );
         } catch (error: any) {
-          console.error("비밀번호 재설정 요청 API 호출 실패:", error.response?.data || error.message);
-          alert(error.response?.data?.message || "비밀번호 재설정 요청에 실패했습니다. 아이디 또는 이메일을 다시 확인해주세요.");
+          console.error(
+            "비밀번호 재설정 요청 API 호출 실패:",
+            error.response?.data || error.message
+          );
+          alert(
+            error.response?.data?.message ||
+              "비밀번호 재설정 요청에 실패했습니다. 아이디 또는 이메일을 다시 확인해주세요."
+          );
           throw error;
         }
       },
@@ -391,16 +405,23 @@ export const useAuthStore = create<AuthState>()( // AuthState만 사용 (기존 
           } else {
             alert("비밀번호 변경에 실패했습니다.");
           }
-          console.error("비밀번호 변경 실패:", err.response?.data || err.message);
+          console.error(
+            "비밀번호 변경 실패:",
+            err.response?.data || err.message
+          );
           throw err;
         }
       },
     }),
     {
-      name: 'auth-storage', // 로컬 스토리지에 저장될 키 이름
+      name: "auth-storage", // 로컬 스토리지에 저장될 키 이름
       storage: createJSONStorage(() => localStorage), // 사용할 스토리지 (localStorage)
       // `authToken`, `isAuthenticated`, `user`만 영속화하도록 설정
-      partialize: (state) => ({ authToken: state.authToken, isAuthenticated: state.isAuthenticated, user: state.user }),
+      partialize: (state) => ({
+        authToken: state.authToken,
+        isAuthenticated: state.isAuthenticated,
+        user: state.user,
+      }),
     }
   )
 );
