@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axiosInstance";
+import { useContestStore } from "../../store/useContestStore";
+import { useCertificateStore } from "../../store/useCertificatesStore";
+import { useCodingTestStore } from "../../store/useCodingTestStore";
 
 type EventItem = {
   type: string;
@@ -37,28 +39,36 @@ const UpcomingEvents: React.FC = () => {
   const [upcoming, setUpcoming] = useState<EventItem[]>([]);
   const navigate = useNavigate();
 
+  // 기존 store들을 사용
+  const { contests, fetchContests } = useContestStore();
+  const { qualifications, fetchQualifications } = useCertificateStore();
+  const { tests, fetchTests } = useCodingTestStore();
+
+  // 컴포넌트 마운트 시 데이터 로드 (이미 인증된 상태에서만 렌더링됨)
   useEffect(() => {
-    Promise.all([
-      api.get("/contests"),
-      api.get("/qualifications"),
-      api.get("/coding-tests"),
-    ]).then(([contestsRes, certsRes, testsRes]) => {
-      const all = [
-        ...contestsRes.data.map((item: any) => ({ ...item, type: "contest" })),
-        ...certsRes.data.map((item: any) => ({ ...item, type: "certificate" })),
-        ...testsRes.data.map((item: any) => ({ ...item, type: "codingtest" })),
-      ];
-      const now = new Date();
-      const filtered = all
-        .filter((item) => new Date(item.start_date) >= now)
-        .sort(
-          (a, b) =>
-            new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
-        )
-        .slice(0, 5);
-      setUpcoming(filtered);
-    });
-  }, []);
+    fetchContests();
+    fetchQualifications();
+    fetchTests();
+  }, []); // 의존성 배열 단순화
+
+  // store 데이터가 변경될 때마다 upcoming 이벤트 업데이트
+  useEffect(() => {
+    const all = [
+      ...contests.map((item) => ({ ...item, type: "contest" })),
+      ...qualifications.map((item) => ({ ...item, type: "certificate" })),
+      ...tests.map((item) => ({ ...item, type: "codingtest" })),
+    ];
+
+    const now = new Date();
+    const filtered = all
+      .filter((item) => new Date(item.start_date) >= now)
+      .sort(
+        (a, b) =>
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+      )
+      .slice(0, 5);
+    setUpcoming(filtered);
+  }, [contests, qualifications, tests]);
 
   return (
     <section className="my-10 select-none">
@@ -73,7 +83,7 @@ const UpcomingEvents: React.FC = () => {
         </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {upcoming.map((event, idx) => (
+          {upcoming.map((event) => (
             <li
               key={event.title + event.start_date}
               className="flex items-center gap-4 bg-white/60 backdrop-blur-lg rounded-2xl shadow-lg p-5 border border-gray-100 hover:scale-[1.025] hover:shadow-xl transition cursor-pointer"
