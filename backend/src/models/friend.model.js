@@ -113,16 +113,21 @@ async function getUserIdByUsername(username) {
   return rows[0]?.id || null;
 }
 
-/** 친구 username으로 친구 정보 조회 (로그인한 사용자 기준) */
+/** 친구 username으로 친구 정보 조회 (양방향) */
 async function getFriendByUsername(userId, friendUsername) {
   const conn = await getConnection();
   const [rows] = await conn.query(
-    `SELECT u.id, u.username, u.nickname, u.profile_image
-       FROM friends f
-       JOIN users u ON u.id = f.friend_id
-      WHERE f.user_id = ? AND u.username = ? AND f.status = 'accepted'
-      LIMIT 1`,
-    [userId, friendUsername]
+    `
+    SELECT u.id, u.username, u.nickname, u.profile_image
+      FROM friends f
+      JOIN users u ON 
+        (u.id = f.friend_id AND f.user_id = ? AND u.username = ?)
+        OR
+        (u.id = f.user_id AND f.friend_id = ? AND u.username = ?)
+     WHERE f.status = 'accepted'
+     LIMIT 1
+    `,
+    [userId, friendUsername, userId, friendUsername]
   );
   await conn.end();
   return rows[0] || null;

@@ -10,4 +10,3 @@ router.delete("/friends/:username", auth, ctrl.deleteFriend);
 router.get('/friends/:username', auth, ctrl.getFriendByUsername);
 
 module.exports = router;
-zjsxmfhffj

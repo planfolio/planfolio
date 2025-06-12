@@ -106,17 +106,21 @@ async function deleteSchedule(id, userId) {
 }
 
 /* 친구 일정 조회 (모든 일정 반환) */
-async function getFriendSchedules(viewerId, friendUsername, start, end) {
+const getFriendSchedules = async (viewerId, friendUsername, start, end) => {
   const conn = await getConnection();
 
-  // 1) 친구 관계 확인
+  // 1) 친구 관계 확인 (양방향)
   const [rel] = await conn.query(
     `SELECT 1
        FROM friends f
-       JOIN users   u ON u.id = f.friend_id
-      WHERE f.user_id = ? AND u.username = ?`,
-    [viewerId, friendUsername]
+       JOIN users u 
+         ON (u.id = f.friend_id AND f.user_id = ?) 
+         OR (u.id = f.user_id AND f.friend_id = ?)
+      WHERE u.username = ? AND f.status = 'accepted'
+      LIMIT 1`,
+    [viewerId, viewerId, friendUsername],
   );
+
   if (rel.length === 0) {
     await conn.end();
     return null;
@@ -132,16 +136,17 @@ async function getFriendSchedules(viewerId, friendUsername, start, end) {
       WHERE u.username = ?
             ${where}
       ORDER BY c.start_date`,
-    [friendUsername, ...params]
+    [friendUsername, ...params],
   );
+
   await conn.end();
 
-  return rows.map((r) => ({
+  return rows.map(r => ({
     ...r,
     start_date: formatDate(r.start_date),
-    end_date: formatDate(r.end_date),
+    end_date:   formatDate(r.end_date),
   }));
-}
+};
 
 /* 공개 계정 일정 조회 (비공개 계정이면 null) */
 async function getPublicSchedules(username, start, end) {
