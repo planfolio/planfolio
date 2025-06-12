@@ -137,10 +137,9 @@ const FriendCalendar: React.FC = () => {
       <div className="w-full max-w-2xl bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/60 px-8 py-10">
         <h1 className="text-3xl font-extrabold mb-4 text-gray-900 text-center tracking-tight">
           {friendInfo.nickname}님의 캘린더
-        </h1>
-        <p className="text-md text-gray-600 text-center mb-8">
-          이 캘린더에는 {friendInfo.nickname}님이 공개 설정한 일정만 표시됩니다.
-        </p>
+      </h1>
+
+
 
         {friendCalendarEvents.length === 0 ? (
           <p className="text-gray-600 text-center py-8">

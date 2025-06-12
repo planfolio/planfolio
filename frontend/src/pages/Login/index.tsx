@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
       navigate("/");
     } catch (err) {
       alert("로그인 실패");
-      console.error("로그인 실패:", err); // 디버깅을 위해 콘솔에 에러 출력
+      console.error("로그인 실패:", err);
     }
   };
 
@@ -54,40 +54,20 @@ const LoginPage: React.FC = () => {
         />
         <button
           type="submit"
-          className="w-full py-3 rounded-lg font-bold text-white bg-orange-500 hover:bg-orange-600 transition text-base shadow-md"
+          className="w-full py-3 rounded-lg font-bold text-white bg-orange-500 hover:bg-orange-600 transition text-base shadow-md mb-4"
         >
           로그인
         </button>
 
-        {/* 아이디/비밀번호 찾기 및 회원가입 링크 추가 */}
-        <div className="w-full flex justify-between items-center mt-4">
-          {/* 아이디 찾기 버튼 */}
-          <button
-            type="button"
-            onClick={() => navigate("/find-username")} // 아이디 찾기 페이지 경로
-            className="text-sm text-gray-600 hover:underline font-medium"
-          >
-            아이디 찾기
-          </button>
+        {/* 회원가입 버튼 */}
+        <button
+          type="button"
+          onClick={() => navigate("/signup")}
+          className="ml-[auto] text-sm text-orange-500 hover:underline font-medium"
+        >
+          회원가입 하러가기
+        </button>
 
-          {/* 비밀번호 찾기 버튼 */}
-          <button
-            type="button"
-            onClick={() => navigate("/reset-password")} // 비밀번호 재설정 페이지 경로 (loginpassword.tsx)
-            className="text-sm text-gray-600 hover:underline font-medium"
-          >
-            비밀번호 찾기
-          </button>
-
-          {/* 회원가입 버튼 */}
-          <button
-            type="button"
-            onClick={() => navigate("/signup")}
-            className="text-sm text-orange-500 hover:underline font-medium"
-          >
-            회원가입 하러가기
-          </button>
-        </div>
       </form>
     </section>
   );
