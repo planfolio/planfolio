@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:11          
+    container_name: my-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass   
+      MARIADB_DATABASE: myapp          
+    ports:
+      - "3306:3306"
+    volumes:
+      # ────────────────────────────────────────────────────────────────
+      # ① 초기화·시드 스크립트 전용 디렉터리를 통째로 마운트 (읽기 전용)
+      #    알파벳 순으로 모든 *.sql 이 자동 실행됩니다.
+      # ────────────────────────────────────────────────────────────────
+      - ./db:/docker-entrypoint-initdb.d:ro
+      # ② DB 실제 데이터를 저장할 볼륨 (컨테이너 재시작 시 데이터 보존)
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:
