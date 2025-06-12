@@ -8,6 +8,7 @@ const {
   getFriends,
   deleteFriend,
   getUserIdByUsername,
+  getFriendByUsername,
 } = require("../models/friend.model");
 
 /** 친구 요청 보내기 */
@@ -192,5 +193,24 @@ exports.deleteFriend = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "친구 삭제 실패" });
+  }
+};
+
+/** 친구 정보 조회 */
+exports.getFriendByUsername = async (req, res) => {
+  const myId = req.user.id;
+  const { username } = req.params;
+
+  try {
+    const friend = await getFriendByUsername(myId, username);
+
+    if (!friend) {
+      return res.status(404).json({ message: '친구가 아니거나 존재하지 않는 사용자입니다.' });
+    }
+
+    res.json(friend);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: '친구 정보 조회 중 오류가 발생했습니다.' });
   }
 };

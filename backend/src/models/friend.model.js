@@ -113,6 +113,21 @@ async function getUserIdByUsername(username) {
   return rows[0]?.id || null;
 }
 
+/** 친구 username으로 친구 정보 조회 (로그인한 사용자 기준) */
+async function getFriendByUsername(userId, friendUsername) {
+  const conn = await getConnection();
+  const [rows] = await conn.query(
+    `SELECT u.id, u.username, u.nickname, u.profile_image
+       FROM friends f
+       JOIN users u ON u.id = f.friend_id
+      WHERE f.user_id = ? AND u.username = ? AND f.status = 'accepted'
+      LIMIT 1`,
+    [userId, friendUsername]
+  );
+  await conn.end();
+  return rows[0] || null;
+}
+
 module.exports = {
   addFriendRequest,
   getFriendRequestById,
@@ -123,4 +138,5 @@ module.exports = {
   getFriends,
   deleteFriend,
   getUserIdByUsername,
+  getFriendByUsername,
 };
