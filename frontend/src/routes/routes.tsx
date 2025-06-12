@@ -31,7 +31,7 @@ const AppRoutes: React.FC = () => (
 
     {/* 친구 관련 라우트 추가 및 경로 설정 */}
     <Route path="/friends" element={<FriendList />} /> {/* 친구 목록 및 친구 추가/요청 관리 페이지 */}
-    <Route path="/friends/:friendId/calendar" element={<FriendCalendar />} /> {/* 특정 친구의 캘린더 보기 페이지 */}
+    <Route path="/friends/:username/schedule" element={<FriendCalendar />} /> {/* 특정 친구의 캘린더 보기 페이지 */}
   </Routes>
 );
 

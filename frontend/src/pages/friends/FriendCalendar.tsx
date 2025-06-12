@@ -24,7 +24,7 @@ interface FriendInfo {
 }
 
 const FriendCalendar: React.FC = () => {
-  // URL 파라미터에서 friendId를 가져옵니다.
+  // URL 파라미터에서 username을 가져옵니다.
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
 
@@ -51,7 +51,7 @@ const FriendCalendar: React.FC = () => {
 
     // friendId가 없을 경우 에러 처리
     if (!username) {
-      setError("친구 ID가 제공되지 않았습니다.");
+      setError("친구 username이 제공되지 않았습니다.");
       setLoading(false);
       return;
     }
