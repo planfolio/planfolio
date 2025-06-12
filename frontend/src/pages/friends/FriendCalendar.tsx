@@ -24,14 +24,17 @@ interface FriendInfo {
 }
 
 const FriendCalendar: React.FC = () => {
-  // URL 파라미터에서 friendId를 가져옵니다.
-  const { friendId } = useParams<{ friendId: string }>();
+  // URL 파라미터에서 username을 가져옵니다.
+  const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
 
   // useFriendStore에서 캘린더 가져오기 함수를 가져옵니다.
   const { getFriendCalendar } = useFriendStore();
   // useAuthStore에서 인증 상태를 가져옵니다.
   const { isAuthenticated, user } = useAuthStore(); // 현재 로그인 사용자 정보도 필요할 수 있음
+
+
+
 
   // 상태 관리
   const [friendCalendarEvents, setFriendCalendarEvents] = useState<FriendCalendarEntry[]>([]);
@@ -47,8 +50,8 @@ const FriendCalendar: React.FC = () => {
     }
 
     // friendId가 없을 경우 에러 처리
-    if (!friendId) {
-      setError("친구 ID가 제공되지 않았습니다.");
+    if (!username) {
+      setError("친구 username이 제공되지 않았습니다.");
       setLoading(false);
       return;
     }
@@ -62,14 +65,15 @@ const FriendCalendar: React.FC = () => {
         // 이 부분은 `FriendList`에서 `Maps`할 때 `state`로 넘겨주거나,
         // 별도의 `useFriendStore` 함수를 추가하여 친구 목록에서 가져오는 것이 더 효율적일 수 있습니다.
         // 여기서는 임시로 API 호출을 가정합니다.
-        // **주의: 이 API는 백엔드 명세에 없으므로 백엔드와 확인이 필요합니다.**
-        const friendRes = await api.get(`/users/${friendId}`);
+        
+        const friendRes = await api.get(`/friends/${username}`);
         setFriendInfo(friendRes.data);
 
         // 2. 친구의 공개된 캘린더 일정 불러오기
-        // **주의: 이 API는 백엔드 명세에 없으므로 백엔드와 확인이 필요합니다.**
-        const events = await getFriendCalendar(parseInt(friendId));
-        setFriendCalendarEvents(events);
+        
+        const events = await getFriendCalendar(username);
+        console.log('[FriendCalendar] events from API:', events);
+        setFriendCalendarEvents(Array.isArray(events) ? events : []);
 
       } catch (err: any) {
         console.error('친구 캘린더 또는 친구 정보 불러오기 실패:', err.response?.data || err.message);
@@ -82,7 +86,7 @@ const FriendCalendar: React.FC = () => {
     };
 
     fetchFriendDataAndCalendar();
-  }, [isAuthenticated, friendId, navigate, getFriendCalendar]); // 의존성 배열에 모든 외부 변수 포함
+  }, [isAuthenticated, username, navigate, getFriendCalendar]); // 의존성 배열에 모든 외부 변수 포함
 
   // 로딩, 에러, 친구 정보 없음 상태 처리
   if (loading) {
