@@ -43,7 +43,7 @@ interface FriendState {
   sendFriendRequest: (targetUsername: string) => Promise<void>;
   handleFriendRequest: (senderUsername: string, action: 'accept' | 'reject') => Promise<void>; // 수락/거절 통합
   removeFriend: (friendUsername: string) => Promise<void>; // 친구 삭제 // <--- 추가
-  getFriendCalendar: (friendId: number) => Promise<FriendCalendarEntry[]>;
+  getFriendCalendar: (username: string) => Promise<FriendCalendarEntry[]>;
 }
 
 export const useFriendStore = create<FriendState>((set, get) => ({
@@ -135,14 +135,13 @@ export const useFriendStore = create<FriendState>((set, get) => ({
 
   // 캘린더 관련 API는 기존과 유사
   // (API 명세에 따로 언급이 없었지만, `/friends/:friendId/calendar`는 유지한다고 가정)
-  getFriendCalendar: async (friendId: number) => {
-    try {
-      // 명세에는 없지만, 친구의 캘린더는 친구 ID로 가져온다고 가정
-      const response = await api.get(`/friends/${friendId}/calendar`);
-      return response.data; // FriendCalendarEntry[] 반환
-    } catch (error) {
-      console.error(`친구 (${friendId}) 캘린더 불러오기 실패:`, error);
-      throw error;
-    }
-  },
+  getFriendCalendar: async (username) => {
+  try {
+    const response = await api.get(`/friends/${username}/schedules`);
+    return response.data.schedules || []; // 배열만 반환
+  } catch (error) {
+    console.error(`친구 (${username}) 캘린더 불러오기 실패:`, error);
+    return []; // 실패 시 빈 배열 반환
+  }
+},
 }));

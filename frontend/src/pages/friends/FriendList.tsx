@@ -183,7 +183,7 @@ const FriendList: React.FC = () => {
                   </div>
                   <div className="flex gap-2"> {/* 버튼들을 감싸는 div 추가 */}
                     <button
-                      onClick={() => navigate(`/friends/${friend.id}/calendar`)} // 친구 캘린더 페이지로 이동
+                      onClick={() => navigate(`/friends/${friend.username}/schedule`)} // 친구 캘린더 페이지로 이동
                       className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition text-sm shadow-md"
                     >
                       캘린더 보기
